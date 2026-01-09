@@ -1,0 +1,250 @@
+.anime-card {
+  background: linear-gradient(
+    180deg,
+    var(--bg-card) 0%,
+    rgba(21, 31, 46, 0.95) 100%
+  );
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  border: 1px solid rgba(61, 180, 242, 0.1);
+  transition: all 0.3s ease;
+  cursor: pointer;
+  position: relative;
+}
+
+.anime-card:hover {
+  border-color: var(--card-accent);
+  box-shadow: 
+    0 20px 40px rgba(0, 0, 0, 0.4),
+    0 0 30px color-mix(in srgb, var(--card-accent) 25%, transparent),
+    inset 0 0 20px color-mix(in srgb, var(--card-accent) 5%, transparent);
+}
+
+.card-image-wrapper {
+  position: relative;
+  aspect-ratio: 2/3;
+  overflow: hidden;
+}
+
+.card-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.5s ease;
+}
+
+.anime-card:hover .card-image {
+  transform: scale(1.08);
+}
+
+.card-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to bottom,
+    rgba(0, 0, 0, 0.1) 0%,
+    transparent 30%,
+    transparent 60%,
+    rgba(0, 0, 0, 0.8) 100%
+  );
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: flex-end;
+  padding: var(--space-sm);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.anime-card:hover .card-overlay {
+  opacity: 1;
+}
+
+.match-badge {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(8px);
+  padding: var(--space-sm) var(--space-md);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--match-color);
+}
+
+.match-score {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--match-color);
+  line-height: 1;
+}
+
+.match-label {
+  font-size: 0.625rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--text-muted);
+}
+
+.score-badge {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(8px);
+  padding: var(--space-xs) var(--space-sm);
+  border-radius: var(--radius-sm);
+  color: var(--warning);
+  font-size: 0.813rem;
+  font-weight: 600;
+}
+
+.card-format {
+  position: absolute;
+  top: var(--space-sm);
+  left: var(--space-sm);
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(8px);
+  padding: var(--space-xs) var(--space-sm);
+  border-radius: var(--radius-sm);
+  font-size: 0.688rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-secondary);
+}
+
+.card-content {
+  padding: var(--space-md);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+.card-title {
+  font-size: 0.938rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  line-height: 1.4;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.card-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-sm);
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.card-meta span {
+  display: flex;
+  align-items: center;
+}
+
+.card-meta span::after {
+  content: '•';
+  margin-left: var(--space-sm);
+  opacity: 0.4;
+}
+
+.card-meta span:last-child::after {
+  display: none;
+}
+
+.status-badge {
+  text-transform: capitalize;
+}
+
+.status-badge.finished,
+.status-badge.complete {
+  color: var(--success);
+}
+
+.status-badge.releasing {
+  color: var(--info);
+}
+
+.card-genres {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-xs);
+}
+
+.genre-tag {
+  font-size: 0.688rem;
+  padding: 3px 10px;
+  background: rgba(21, 31, 46, 0.8);
+  border: 1px solid rgba(61, 180, 242, 0.15);
+  border-radius: var(--radius-sm);
+  color: var(--text-secondary);
+  transition: all 0.2s ease;
+}
+
+.anime-card:hover .genre-tag {
+  border-color: rgba(61, 180, 242, 0.25);
+}
+
+.genre-more {
+  font-size: 0.688rem;
+  padding: 2px 8px;
+  color: var(--text-muted);
+}
+
+.card-streaming {
+  display: flex;
+  gap: var(--space-xs);
+  margin-top: var(--space-xs);
+  padding-top: var(--space-sm);
+  border-top: 1px solid rgba(61, 180, 242, 0.1);
+}
+
+.streaming-badge {
+  width: 26px;
+  height: 26px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(21, 31, 46, 0.9);
+  border: 1px solid color-mix(in srgb, var(--service-color) 40%, transparent);
+  border-radius: var(--radius-sm);
+  font-size: 0.563rem;
+  font-weight: 700;
+  color: var(--service-color);
+  transition: all 0.2s ease;
+}
+
+.streaming-badge:hover {
+  border-color: var(--service-color);
+  box-shadow: 0 0 10px color-mix(in srgb, var(--service-color) 30%, transparent);
+}
+
+/* Skeleton styles */
+.skeleton-card {
+  pointer-events: none;
+}
+
+.skeleton-card .card-image-wrapper {
+  background: var(--bg-secondary);
+}
+
+.skeleton-title {
+  height: 20px;
+  width: 80%;
+  border-radius: var(--radius-sm);
+}
+
+.skeleton-meta {
+  height: 14px;
+  width: 60%;
+  border-radius: var(--radius-sm);
+}
+
+.skeleton-genres {
+  height: 20px;
+  width: 90%;
+  border-radius: var(--radius-sm);
+}
+

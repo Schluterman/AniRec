@@ -1,0 +1,101 @@
+.streaming-filter {
+  background: var(--bg-card);
+  border-radius: var(--radius-lg);
+  padding: var(--space-lg);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.filter-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--space-lg);
+}
+
+.filter-title {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.filter-title svg {
+  color: var(--accent-primary);
+}
+
+.clear-button {
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  font-size: 0.875rem;
+  cursor: pointer;
+  padding: var(--space-xs) var(--space-sm);
+  border-radius: var(--radius-sm);
+  transition: all 0.2s ease;
+}
+
+.clear-button:hover {
+  color: var(--accent-primary);
+  background: rgba(0, 212, 170, 0.1);
+}
+
+.services-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-sm);
+}
+
+.service-chip {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  padding: var(--space-sm) var(--space-md);
+  background: var(--bg-secondary);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: var(--radius-full);
+  color: var(--text-secondary);
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.service-chip:hover {
+  border-color: var(--service-color);
+  color: var(--text-primary);
+}
+
+.service-chip.selected {
+  background: rgba(var(--service-color), 0.1);
+  border-color: var(--service-color);
+  color: var(--text-primary);
+}
+
+.service-indicator {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--service-color);
+  opacity: 0.6;
+  transition: opacity 0.2s ease;
+}
+
+.service-chip.selected .service-indicator {
+  opacity: 1;
+  box-shadow: 0 0 8px var(--service-color);
+}
+
+.service-chip svg {
+  color: var(--service-color);
+}
+
+.filter-info {
+  margin-top: var(--space-md);
+  font-size: 0.813rem;
+  color: var(--text-muted);
+  padding-top: var(--space-md);
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+}
+
