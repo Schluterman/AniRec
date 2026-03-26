@@ -67,7 +67,7 @@ query ($userName: String) {
 }
 `;
 
-// Query to get anime recommendations based on genres and tags
+// Query for searching anime by genres
 const RECOMMENDATIONS_QUERY = `
 query ($page: Int, $perPage: Int, $genres: [String], $excludeIds: [Int], $sort: [MediaSort]) {
   Page(page: $page, perPage: $perPage) {
@@ -113,14 +113,22 @@ query ($page: Int, $perPage: Int, $genres: [String], $excludeIds: [Int], $sort: 
         url
         type
       }
+      relations {
+        edges {
+          relationType(version: 2)
+          node {
+            id
+          }
+        }
+      }
     }
   }
 }
 `;
 
-// Query for searching anime with more filters
+// Query for searching anime with score filter — supports genre_in OR tag_in
 const SEARCH_RECOMMENDATIONS_QUERY = `
-query ($page: Int, $perPage: Int, $genres: [String], $excludeIds: [Int], $sort: [MediaSort], $minimumScore: Int) {
+query ($page: Int, $perPage: Int, $genres: [String], $tags: [String], $sort: [MediaSort], $minimumScore: Int) {
   Page(page: $page, perPage: $perPage) {
     pageInfo {
       total
@@ -129,10 +137,10 @@ query ($page: Int, $perPage: Int, $genres: [String], $excludeIds: [Int], $sort: 
       hasNextPage
     }
     media(
-      type: ANIME, 
-      genre_in: $genres, 
-      id_not_in: $excludeIds, 
-      sort: $sort, 
+      type: ANIME,
+      genre_in: $genres,
+      tag_in: $tags,
+      sort: $sort,
       status_in: [FINISHED, RELEASING],
       averageScore_greater: $minimumScore
     ) {
@@ -170,6 +178,14 @@ query ($page: Int, $perPage: Int, $genres: [String], $excludeIds: [Int], $sort: 
         site
         url
         type
+      }
+      relations {
+        edges {
+          relationType(version: 2)
+          node {
+            id
+          }
+        }
       }
     }
   }
@@ -224,86 +240,115 @@ export async function fetchAdvancedRecommendations(
   perPage: number = 50,
   minimumScore: number = 60
 ): Promise<{ pageInfo: { hasNextPage: boolean; total: number }; media: Media[] }> {
-  // Note: We don't send excludeIds to the API anymore since large lists cause issues
-  // Instead, we filter client-side in useRecommendations hook
   const data = await fetchGraphQL(SEARCH_RECOMMENDATIONS_QUERY, {
     page,
     perPage,
     genres: genres.length > 0 ? genres : undefined,
-    excludeIds: [], // Empty - we filter client-side
+    tags: undefined,
     sort: ['SCORE_DESC', 'POPULARITY_DESC'],
     minimumScore,
   });
   return data.Page;
 }
 
-// Fetch a MASSIVE pool of anime by loading multiple pages with variety
+// Fetch one page and return media + whether more pages exist
+async function fetchPoolPage(
+  genres: string[] | undefined,
+  tags: string[] | undefined,
+  sort: string[],
+  minScore: number,
+  page: number
+): Promise<{ media: Media[]; hasNextPage: boolean }> {
+  try {
+    const data = await fetchGraphQL(SEARCH_RECOMMENDATIONS_QUERY, {
+      page,
+      perPage: 50,
+      genres: genres && genres.length > 0 ? genres : undefined,
+      tags: tags && tags.length > 0 ? tags : undefined,
+      sort,
+      minimumScore: minScore,
+    });
+    return {
+      media: (data.Page?.media || []) as Media[],
+      hasNextPage: data.Page?.pageInfo?.hasNextPage ?? false,
+    };
+  } catch {
+    return { media: [], hasNextPage: false };
+  }
+}
+
+// Fetch all pages for a stream until exhausted (capped at maxPages per stream)
+async function fetchStreamAllPages(
+  genres: string[] | undefined,
+  tags: string[] | undefined,
+  sort: string[],
+  minScore: number,
+  maxPages: number = 10
+): Promise<Media[]> {
+  // Fetch page 1 first to learn total pages
+  const first = await fetchPoolPage(genres, tags, sort, minScore, 1);
+  const allMedia = [...first.media];
+
+  if (!first.hasNextPage) return allMedia;
+
+  // Fire remaining pages in parallel (up to maxPages)
+  const remaining: Promise<{ media: Media[] }>[] = [];
+  for (let p = 2; p <= maxPages; p++) {
+    remaining.push(fetchPoolPage(genres, tags, sort, minScore, p));
+  }
+
+  const results = await Promise.all(remaining);
+  for (const r of results) {
+    allMedia.push(...r.media);
+    if (!('hasNextPage' in r) || !(r as { hasNextPage: boolean }).hasNextPage) break;
+  }
+
+  return allMedia;
+}
+
+// Fetch a large, uncapped pool driven by the user's top genres and tags.
+// Each stream independently paginates until AniList has no more results (max 10 pages per stream).
 export async function fetchLargeAnimePool(
   genres: string[],
-  pagesToFetch: number = 10
+  tags: string[]
 ): Promise<Media[]> {
-  const allMedia: Media[] = [];
-  const fetchPromises: Promise<Media[]>[] = [];
+  const top3Genres = genres.slice(0, 3);
+  const top3Tags = tags.slice(0, 3);
 
-  // Different sort strategies for variety
-  const sortStrategies = [
-    { sort: ['SCORE_DESC'], minScore: 70 },      // High rated
-    { sort: ['SCORE_DESC'], minScore: 50 },      // Medium+ rated
-    { sort: ['POPULARITY_DESC'], minScore: 40 }, // Popular
-    { sort: ['TRENDING_DESC'], minScore: 30 },   // Trending
-    { sort: ['FAVOURITES_DESC'], minScore: 40 }, // Fan favorites
-    { sort: ['START_DATE_DESC'], minScore: 50 }, // Recent releases
-    { sort: ['SCORE_DESC'], minScore: 60 },      // Good anime
-    { sort: ['POPULARITY_DESC'], minScore: 30 }, // Very popular (lower threshold)
-    { sort: ['TRENDING_DESC'], minScore: 40 },   // More trending
-    { sort: ['START_DATE_DESC'], minScore: 40 }, // More recent
-  ];
+  // Build parallel stream promises — each exhausts its own pages
+  const streams: Promise<Media[]>[] = [];
 
-  // For each page, use a different strategy
-  for (let i = 0; i < pagesToFetch; i++) {
-    const strategy = sortStrategies[i % sortStrategies.length];
-    const page = Math.floor(i / sortStrategies.length) + 1;
-
-    // If we have genres, use them; otherwise fetch general popular anime
-    fetchPromises.push(
-      fetchGraphQL(SEARCH_RECOMMENDATIONS_QUERY, {
-        page,
-        perPage: 50, // AniList max is 50 per page
-        genres: genres.length > 0 ? genres : undefined,
-        excludeIds: [],
-        sort: strategy.sort,
-        minimumScore: strategy.minScore,
-      })
-        .then(data => (data.Page?.media || []) as Media[])
-        .catch(() => [] as Media[]) // Don't fail if one request fails
-    );
+  // Genre-based streams
+  for (const genre of top3Genres) {
+    streams.push(fetchStreamAllPages([genre], undefined, ['SCORE_DESC'], 60));
+    streams.push(fetchStreamAllPages([genre], undefined, ['POPULARITY_DESC'], 40));
   }
 
-  // If user has specific genres, also fetch some from individual top genres for variety
-  if (genres.length > 0) {
-    for (const genre of genres.slice(0, 3)) {
-      fetchPromises.push(
-        fetchGraphQL(SEARCH_RECOMMENDATIONS_QUERY, {
-          page: 1,
-          perPage: 50,
-          genres: [genre], // Single genre for more targeted results
-          excludeIds: [],
-          sort: ['POPULARITY_DESC'],
-          minimumScore: 40,
-        })
-          .then(data => (data.Page?.media || []) as Media[])
-          .catch(() => [] as Media[])
-      );
-    }
+  // Tag-based streams
+  for (const tag of top3Tags) {
+    streams.push(fetchStreamAllPages(undefined, [tag], ['SCORE_DESC'], 60));
+    streams.push(fetchStreamAllPages(undefined, [tag], ['POPULARITY_DESC'], 40));
   }
 
-  // Fetch all pages in parallel
-  const results = await Promise.all(fetchPromises);
+  // Combined top genres for variety
+  if (top3Genres.length > 0) {
+    streams.push(fetchStreamAllPages(top3Genres, undefined, ['SCORE_DESC'], 70));
+    streams.push(fetchStreamAllPages(top3Genres, undefined, ['TRENDING_DESC'], 40));
+    streams.push(fetchStreamAllPages(top3Genres, undefined, ['FAVOURITES_DESC'], 50));
+    streams.push(fetchStreamAllPages(top3Genres, undefined, ['START_DATE_DESC'], 55));
+  }
 
-  // Combine and deduplicate
+  // Global discovery streams (no genre/tag filter) to surface anything relevant
+  streams.push(fetchStreamAllPages(undefined, undefined, ['TRENDING_DESC'], 60));
+  streams.push(fetchStreamAllPages(undefined, undefined, ['FAVOURITES_DESC'], 70));
+
+  const results = await Promise.all(streams);
+
+  // Deduplicate across all streams
   const seenIds = new Set<number>();
-  for (const mediaList of results) {
-    for (const media of mediaList) {
+  const allMedia: Media[] = [];
+  for (const batch of results) {
+    for (const media of batch) {
       if (!seenIds.has(media.id)) {
         seenIds.add(media.id);
         allMedia.push(media);

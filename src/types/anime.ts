@@ -29,6 +29,12 @@ export interface Media {
     url: string;
     type: string;
   }[];
+  relations?: {
+    edges: {
+      relationType: string;
+      node: { id: number };
+    }[];
+  };
 }
 
 export interface MediaListEntry {

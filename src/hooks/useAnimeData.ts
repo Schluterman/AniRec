@@ -164,11 +164,17 @@ export function useProcessedUserData(userName: string): ProcessedUserData | null
 
 export function useRecommendations(
   processedData: ProcessedUserData | null,
-  selectedServices: StreamingServiceId[]
+  selectedServices: StreamingServiceId[],
+  dismissedIds: Set<number> = new Set()
 ) {
-  // Get top genres from user's watch history
+  // Get top genres and tags from user's watch history
   const topGenres = useMemo(() =>
     processedData?.favoriteGenres.slice(0, 5).map(g => g.genre) || [],
+    [processedData]
+  );
+
+  const topTags = useMemo(() =>
+    processedData?.favoriteTags.slice(0, 8).map(t => t.tag) || [],
     [processedData]
   );
 
@@ -176,27 +182,37 @@ export function useRecommendations(
   const allWatchedIds = processedData?.watchedIds || [];
   const watchedIdSet = useMemo(() => new Set(allWatchedIds), [allWatchedIds]);
 
-  // Fetch a LARGE pool of anime - 5 pages = ~250 unique anime
+  // Fetch a large, uncapped pool driven by genres + tags
   const query = useQuery({
-    queryKey: ['recommendations-pool', topGenres],
-    queryFn: () => fetchLargeAnimePool(topGenres, 5),
-    staleTime: 1000 * 60 * 15, // Cache for 15 minutes
+    queryKey: ['recommendations-pool', topGenres, topTags],
+    queryFn: () => fetchLargeAnimePool(topGenres, topTags),
+    staleTime: 1000 * 60 * 30, // Cache for 30 minutes
     enabled: !!processedData,
   });
 
-  // Filter out already watched anime AND by streaming service
+  // Filter out watched, sequel-unsafe, dismissed, and by streaming service
   const filteredMedia = useMemo(() => {
     if (!query.data) return [];
 
-    // First filter out any anime the user has already watched/dropped/planning
-    const unwatchedAnime = query.data.filter(anime => !watchedIdSet.has(anime.id));
+    const filtered = query.data.filter(anime => {
+      // Exclude anything already on the user's list
+      if (watchedIdSet.has(anime.id)) return false;
 
-    // Then filter by streaming service if any selected
-    const serviceFiltered = filterByStreamingService(unwatchedAnime, selectedServices);
+      // Exclude shows dismissed this session
+      if (dismissedIds.has(anime.id)) return false;
 
-    // Shuffle the results for variety each time
+      // Sequel safety: if this show has a PREQUEL edge, the prequel must be in watchedIds
+      const prequelEdge = anime.relations?.edges.find(e => e.relationType === 'PREQUEL');
+      if (prequelEdge && !watchedIdSet.has(prequelEdge.node.id)) return false;
+
+      return true;
+    });
+
+    // Apply streaming service filter
+    const serviceFiltered = filterByStreamingService(filtered, selectedServices);
+
     return shuffleArray(serviceFiltered);
-  }, [query.data, selectedServices, watchedIdSet]);
+  }, [query.data, selectedServices, watchedIdSet, dismissedIds]);
 
   // Count of unwatched anime before streaming filter
   const unwatchedCount = useMemo(() => {

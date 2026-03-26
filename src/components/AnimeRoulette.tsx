@@ -11,6 +11,8 @@ interface AnimeRouletteProps {
   processedData: ProcessedUserData | null;
   isLoading: boolean;
   onAnimeClick?: (anime: Media) => void;
+  onThumbsUp?: (anime: Media) => void;
+  onThumbsDown?: (anime: Media) => void;
 }
 
 // Animation states
@@ -20,11 +22,14 @@ export function AnimeRoulette({
   anime,
   processedData,
   isLoading,
-  onAnimeClick
+  onAnimeClick,
+  onThumbsUp,
+  onThumbsDown,
 }: AnimeRouletteProps) {
   const [packState, setPackState] = useState<PackState>('PACK_IDLE');
   const [selectedAnime, setSelectedAnime] = useState<Media | null>(null);
   const [isHovering, setIsHovering] = useState(false);
+  const [showSavedToast, setShowSavedToast] = useState(false);
 
   // Drag rotation state
   const [packRotation, setPackRotation] = useState(0);
@@ -93,7 +98,25 @@ export function AnimeRoulette({
     setPackState('PACK_IDLE');
     setSelectedAnime(null);
     setPackRotation(0);
+    setShowSavedToast(false);
   }, []);
+
+  const handleThumbsUp = useCallback((e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!selectedAnime) return;
+    onThumbsUp?.(selectedAnime);
+    setShowSavedToast(true);
+    setTimeout(() => {
+      resetPack();
+    }, 1400);
+  }, [selectedAnime, onThumbsUp, resetPack]);
+
+  const handleThumbsDown = useCallback((e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!selectedAnime) return;
+    onThumbsDown?.(selectedAnime);
+    resetPack();
+  }, [selectedAnime, onThumbsDown, resetPack]);
 
   // Drag handlers for 360° pack rotation AND swipe-to-open
   const handleDragStart = useCallback((clientX: number, clientY: number) => {
@@ -604,12 +627,43 @@ export function AnimeRoulette({
                     )}
                   </motion.div>
 
+                  {/* Thumbs Vote */}
+                  <motion.div
+                    className="card-vote"
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.55 }}
+                  >
+                    <button
+                      className="vote-btn vote-up"
+                      onClick={handleThumbsUp}
+                      aria-label="Save to watchlist"
+                      title="Save to Watchlist"
+                    >
+                      <svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20">
+                        <path d="M2 20h2c.55 0 1-.45 1-1v-9c0-.55-.45-1-1-1H2v11zm19.83-7.12c.11-.25.17-.52.17-.8V11c0-1.1-.9-2-2-2h-5.5l.92-4.65c.05-.22.02-.46-.08-.66-.23-.45-.52-.86-.88-1.22L14 2 7.59 8.41C7.21 8.79 7 9.3 7 9.83V19c0 1.1.9 2 2 2h9c.83 0 1.54-.5 1.84-1.22l3-7.09z"/>
+                      </svg>
+                      Save
+                    </button>
+                    <button
+                      className="vote-btn vote-down"
+                      onClick={handleThumbsDown}
+                      aria-label="Skip this anime"
+                      title="Skip"
+                    >
+                      <svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20">
+                        <path d="M22 4h-2c-.55 0-1 .45-1 1v9c0 .55.45 1 1 1h2V4zM2.17 11.12c-.11.25-.17.52-.17.8V13c0 1.1.9 2 2 2h5.5l-.92 4.65c-.05.22-.02.46.08.66.23.45.52.86.88 1.22L10 22l6.41-6.41c.38-.38.59-.89.59-1.42V5c0-1.1-.9-2-2-2H6c-.83 0-1.54.5-1.84 1.22l-3 7.09z"/>
+                      </svg>
+                      Skip
+                    </button>
+                  </motion.div>
+
                   {/* Card Actions */}
                   <motion.div
                     className="card-actions"
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
-                    transition={{ delay: 0.6 }}
+                    transition={{ delay: 0.7 }}
                   >
                     <a
                       href={`https://anilist.co/anime/${selectedAnime.id}`}
@@ -630,6 +684,24 @@ export function AnimeRoulette({
                       View Details
                     </button>
                   </motion.div>
+
+                  {/* Saved Toast */}
+                  <AnimatePresence>
+                    {showSavedToast && (
+                      <motion.div
+                        className="saved-toast"
+                        initial={{ opacity: 0, y: 8, scale: 0.92 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        exit={{ opacity: 0, y: -8, scale: 0.92 }}
+                        transition={{ duration: 0.25 }}
+                      >
+                        <svg viewBox="0 0 24 24" fill="currentColor" width="16" height="16">
+                          <path d="M9 16.2L4.8 12l-1.4 1.4L9 19 21 7l-1.4-1.4L9 16.2z"/>
+                        </svg>
+                        Saved to Watchlist!
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
                 </div>
 
                 {/* Foil Shimmer Overlay */}
