@@ -178,9 +178,10 @@ export function useRecommendations(
     [processedData]
   );
 
-  // Get all watched IDs for client-side filtering
-  const allWatchedIds = processedData?.watchedIds || [];
-  const watchedIdSet = useMemo(() => new Set(allWatchedIds), [allWatchedIds]);
+  const watchedIdSet = useMemo(
+    () => new Set(processedData?.watchedIds ?? []),
+    [processedData]
+  );
 
   // Fetch a large, uncapped pool driven by genres + tags
   const query = useQuery({

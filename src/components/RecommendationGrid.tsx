@@ -77,12 +77,11 @@ export function RecommendationGrid({
       </motion.div>
 
       <div className="anime-grid">
-        {anime.map((item, index) => (
+        {anime.map(item => (
           <AnimeCard
             key={item.id}
             anime={item}
             processedData={processedData}
-            index={index}
             onClick={() => onAnimeClick?.(item)}
           />
         ))}

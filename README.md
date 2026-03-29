@@ -53,14 +53,15 @@ npm run dev
 
 1. **Enter Your AniList Username**: Input your AniList username to load your anime list
 2. **View Your Stats**: See your watching statistics and preferences
-3. **Apply Filters**: Use the filter panel to narrow down recommendations by genre or streaming service
+3. **Pick a booster**: Choose the master pack (all sources) or a platform pack in the booster shop
 4. **Open Card Packs**: Click on the card pack to reveal a random anime recommendation
 5. **Explore Details**: Click on any anime card to view detailed information including synopsis, ratings, and streaming availability
 
 ## 🎯 Key Components
 
 - **AnimeRoulette**: Interactive card pack system with tear animations
-- **FilterPanel**: Advanced filtering options for genres and streaming services
+- **PackShop** / **BoosterSheet**: Booster shop (desktop sidebar + mobile bottom sheet)
+- **LandingHero**: Pre-auth landing with fanned packs and default booster selection
 - **UserStats**: Display user's anime watching statistics
 - **AnimeModal**: Detailed anime information popup
 - **RecommendationGrid**: Grid layout for browsing multiple recommendations

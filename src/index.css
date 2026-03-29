@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Overpass:wght@300;400;500;600;700;800;900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Dancing+Script:wght@500;600;700&family=Lexend:wght@500;600;700;800;900&family=Overpass:wght@300;400;500;600;700;800;900&display=swap');
 
 /* ============================================================
    DESIGN TOKENS
@@ -34,7 +34,12 @@
 
   /* Typography */
   --font-primary: 'Overpass', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-display: 'Lexend', var(--font-primary);
+  --font-accent: 'Dancing Script', cursive;
   --font-mono: 'SF Mono', Monaco, 'Fira Code', monospace;
+
+  /* Layout */
+  --breakpoint-shop-mobile: 900px;
 
   /* Glass effect */
   --glass-bg:     rgba(255, 255, 255, 0.04);

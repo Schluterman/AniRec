@@ -355,8 +355,27 @@
 
 /* Empty message when no anime match filters */
 .pack-empty-message {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-md);
   text-align: center;
   margin-top: var(--space-md);
+}
+
+.pack-empty-market-link {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--anilist-blue);
+  text-decoration: none;
+  border-bottom: 1px solid rgba(61, 180, 242, 0.4);
+  padding-bottom: 2px;
+  transition: color 0.2s, border-color 0.2s;
+}
+
+.pack-empty-market-link:hover {
+  color: var(--anilist-blue-light);
+  border-color: rgba(61, 180, 242, 0.7);
 }
 
 /* ========================================
@@ -483,17 +502,30 @@
 
 /* Front face */
 .pack-front {
-  background-image: url('/AniRecPack_frontv2.png');
+  background-image: var(--pack-front, url('/AniRecPack_frontv2.png'));
   z-index: 2;
-  /* Front face at z=1px for slight depth */
-  transform: translateZ(1px);
+  transform: translateZ(8px);
+}
+
+/* Spine / edge (thin face between front and back) */
+.pack-spine {
+  width: 18px;
+  height: 100%;
+  left: 50%;
+  margin-left: -9px;
+  top: 0;
+  background-image: var(--pack-edge, url('/AniRecPack_backv2.png'));
+  background-size: cover;
+  background-position: center;
+  transform: rotateY(-90deg) translateZ(122px);
+  z-index: 1;
+  filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.35));
 }
 
 /* Back face */
 .pack-back {
-  background-image: url('/AniRecPack_backv2.png');
-  /* Back face rotated and at z=-1px */
-  transform: rotateY(180deg) translateZ(1px);
+  background-image: var(--pack-back, url('/AniRecPack_backv2.png'));
+  transform: rotateY(180deg) translateZ(8px);
 }
 
 /* ========================================
@@ -513,8 +545,8 @@
   backface-visibility: hidden;
   transform: translateZ(2px);
   /* Use pack front image alpha to clip */
-  -webkit-mask-image: url('/AniRecPack_frontv2.png');
-  mask-image: url('/AniRecPack_frontv2.png');
+  -webkit-mask-image: var(--pack-front-mask, url('/AniRecPack_frontv2.png'));
+  mask-image: var(--pack-front-mask, url('/AniRecPack_frontv2.png'));
   -webkit-mask-size: contain;
   mask-size: contain;
   -webkit-mask-position: center;
@@ -533,8 +565,8 @@
   pointer-events: none;
   overflow: hidden;
   /* Foil stripe mask for diagonal shimmer */
-  -webkit-mask-image: url('/AniRecPack_foil_mask.png');
-  mask-image: url('/AniRecPack_foil_mask.png');
+  -webkit-mask-image: var(--pack-foil-mask, url('/AniRecPack_foil_mask.png'));
+  mask-image: var(--pack-foil-mask, url('/AniRecPack_foil_mask.png'));
   -webkit-mask-size: 100% 100%;
   mask-size: 100% 100%;
   -webkit-mask-position: center;
@@ -623,12 +655,12 @@
   left: 0;
   width: 100%;
   height: 100%;
-  background-image: url('/AniRecPack_frontv2.png');
+  background-image: var(--pack-front, url('/AniRecPack_frontv2.png'));
   background-size: contain;
   background-repeat: no-repeat;
   background-position: center;
-  -webkit-mask-image: url('/AniRecPack_split_tear_mask.png');
-  mask-image: url('/AniRecPack_split_tear_mask.png');
+  -webkit-mask-image: var(--pack-tear-mask, url('/AniRecPack_split_tear_mask.png'));
+  mask-image: var(--pack-tear-mask, url('/AniRecPack_split_tear_mask.png'));
   -webkit-mask-size: 100% 100%;
   mask-size: 100% 100%;
   -webkit-mask-position: center;
@@ -654,13 +686,12 @@
   left: 0;
   width: 100%;
   height: 100%;
-  background-image: url('/AniRecPack_frontv2.png');
+  background-image: var(--pack-front, url('/AniRecPack_frontv2.png'));
   background-size: contain;
   background-repeat: no-repeat;
   background-position: center;
-  /* Invert the mask via filter on a pseudo-element approach */
-  -webkit-mask-image: url('/AniRecPack_split_tear_mask.png');
-  mask-image: url('/AniRecPack_split_tear_mask.png');
+  -webkit-mask-image: var(--pack-tear-mask, url('/AniRecPack_split_tear_mask.png'));
+  mask-image: var(--pack-tear-mask, url('/AniRecPack_split_tear_mask.png'));
   -webkit-mask-size: 100% 100%;
   mask-size: 100% 100%;
   -webkit-mask-position: center;
@@ -804,28 +835,48 @@
 }
 
 .pack-wrapper.PACK_OPENING .burst-ring {
-  animation: burstExpand 0.5s ease-out forwards;
+  animation: burstExpand 0.52s cubic-bezier(0.22, 1, 0.36, 1) forwards;
 }
 
 .pack-wrapper.PACK_OPENING .burst-ring:nth-child(2) {
-  animation-delay: 0.1s;
+  animation-delay: 0.08s;
 }
 
 .pack-wrapper.PACK_OPENING .burst-ring:nth-child(3) {
-  animation-delay: 0.2s;
+  animation-delay: 0.16s;
 }
 
 @keyframes burstExpand {
   0% {
-    transform: translate(-50%, -50%) scale(0.5);
+    transform: translate(-50%, -50%) scale(0.35);
     opacity: 1;
-    border-color: rgba(255, 255, 255, 0.9);
+    border-color: rgba(255, 255, 255, 0.95);
+    border-width: 3px;
+  }
+
+  45% {
+    transform: translate(-50%, -50%) scale(1.05);
+    opacity: 1;
+    border-color: rgba(255, 255, 255, 0.85);
   }
 
   100% {
-    transform: translate(-50%, -50%) scale(4);
+    transform: translate(-50%, -50%) scale(4.25);
     opacity: 0;
     border-color: rgba(61, 180, 242, 0);
+    border-width: 2px;
+  }
+}
+
+@keyframes burstExpandReduced {
+  0% {
+    transform: translate(-50%, -50%) scale(0.65);
+    opacity: 0.85;
+  }
+
+  100% {
+    transform: translate(-50%, -50%) scale(2.4);
+    opacity: 0;
   }
 }
 
@@ -1034,6 +1085,14 @@
   background: var(--bg-card);
   border-radius: var(--radius-lg);
   overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.card-details-panel {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
 }
 
 .card-cover {
@@ -1144,6 +1203,13 @@
 
 .because-line strong {
   color: var(--text-primary);
+}
+
+.card-description {
+  font-size: 0.82rem;
+  line-height: 1.55;
+  color: rgba(255, 255, 255, 0.6);
+  margin: 2px 0 0;
 }
 
 .streaming-row {
@@ -1334,6 +1400,53 @@
   border-radius: 2px;
 }
 
+/* Post-reveal: switch SKU vs next pull in same pool */
+.post-reveal-nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-sm);
+  padding: 0 var(--space-md) var(--space-sm);
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.post-reveal-btn {
+  flex: 1;
+  min-width: min(100%, 140px);
+  padding: 11px 16px;
+  font-size: 0.875rem;
+  font-weight: 700;
+  font-family: var(--font-primary);
+  border-radius: var(--radius-lg);
+  cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s, background 0.2s;
+}
+
+.post-reveal-btn--ghost {
+  background: transparent;
+  color: var(--text-secondary);
+  border: 1px solid rgba(61, 180, 242, 0.35);
+}
+
+.post-reveal-btn--ghost:hover {
+  color: var(--text-primary);
+  border-color: rgba(61, 180, 242, 0.55);
+  background: rgba(61, 180, 242, 0.08);
+  transform: translateY(-1px);
+}
+
+.post-reveal-btn--primary {
+  border: none;
+  color: #fff;
+  background: linear-gradient(135deg, var(--anilist-blue), var(--anilist-purple));
+  box-shadow: 0 4px 18px rgba(61, 180, 242, 0.3);
+}
+
+.post-reveal-btn--primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 22px rgba(61, 180, 242, 0.4);
+}
+
 /* ========================================
    Another Pull Button
    ======================================== */
@@ -1379,16 +1492,43 @@
   opacity: 1;
 }
 
-.another-pull-btn span {
-  font-size: 1.25rem;
+.another-pull-icon {
+  width: 22px;
+  height: 22px;
+  flex-shrink: 0;
   position: relative;
   z-index: 1;
+  color: var(--anilist-blue);
 }
 
 /* ========================================
-   Loading State
+   Loading State (aligned with Card Market / landing glow)
    ======================================== */
+.anime-roulette:has(.pack-loading) {
+  position: relative;
+  isolation: isolate;
+}
+
+.anime-roulette:has(.pack-loading)::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse 75% 55% at 50% 35%, rgba(192, 99, 255, 0.14) 0%, transparent 55%),
+    radial-gradient(ellipse 60% 50% at 50% 70%, rgba(252, 109, 137, 0.1) 0%, transparent 50%);
+}
+
+[data-theme="light"] .anime-roulette:has(.pack-loading)::before {
+  background:
+    radial-gradient(ellipse 75% 55% at 50% 35%, rgba(192, 99, 255, 0.08) 0%, transparent 55%),
+    radial-gradient(ellipse 60% 50% at 50% 70%, rgba(252, 109, 137, 0.06) 0%, transparent 50%);
+}
+
 .pack-loading {
+  position: relative;
+  z-index: 1;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -1400,6 +1540,7 @@
   width: 240px;
   height: 330px;
   position: relative;
+  filter: drop-shadow(0 12px 40px rgba(252, 109, 137, 0.2));
 }
 
 .loading-pack .pack-face {
@@ -1408,7 +1549,7 @@
   left: 0;
   width: 100%;
   height: 100%;
-  background-image: url('/AniRecPack_frontv2.png');
+  background-image: var(--pack-front, url('/AniRecPack_frontv2.png'));
   background-size: contain;
   background-repeat: no-repeat;
   background-position: center;
@@ -1430,8 +1571,14 @@
 }
 
 .loading-text {
-  color: var(--text-muted);
-  font-style: italic;
+  margin: 0;
+  font-family: var(--font-primary);
+  font-size: 0.72rem;
+  font-weight: 800;
+  font-style: normal;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--anilist-pink);
   animation: pulse 1.5s ease-in-out infinite;
 }
 
@@ -1529,6 +1676,18 @@
   .pack-shimmer,
   .card-foil {
     animation: none;
+  }
+
+  .pack-wrapper.PACK_OPENING .burst-ring {
+    animation: burstExpandReduced 0.32s ease-out forwards;
+  }
+
+  .pack-wrapper.PACK_OPENING .burst-ring:nth-child(2) {
+    animation-delay: 0.05s;
+  }
+
+  .pack-wrapper.PACK_OPENING .burst-ring:nth-child(3) {
+    animation-delay: 0.1s;
   }
 
   .pack-glow {

@@ -8,11 +8,10 @@ import './AnimeCard.css';
 interface AnimeCardProps {
   anime: Media;
   processedData: ProcessedUserData | null;
-  index: number;
   onClick?: () => void;
 }
 
-export function AnimeCard({ anime, processedData, index, onClick }: AnimeCardProps) {
+export function AnimeCard({ anime, processedData, onClick }: AnimeCardProps) {
   const matchScore = processedData ? calculateMatchScore(anime, processedData) : null;
   const streamingServices = getStreamingServicesForAnime(anime);
   const displayTitle = anime.title.english || anime.title.romaji;

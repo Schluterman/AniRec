@@ -52,7 +52,7 @@ export function UserStats({ data, userName }: UserStatsProps) {
           >
             <span className="genres-label">Top Genres:</span>
             <div className="genres-list">
-              {data.favoriteGenres.slice(0, 5).map((g, i) => (
+              {data.favoriteGenres.slice(0, 5).map(g => (
                 <span key={g.genre} className="genre-pill">
                   {g.genre}
                 </span>

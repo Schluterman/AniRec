@@ -1,0 +1,416 @@
+/* Card Market — hero matches landing atmosphere; grid stays clean below */
+.app--card-shop .card-shop-page {
+  flex: 1;
+  width: 100%;
+  background: var(--bg-primary);
+}
+
+.card-shop-page-inner {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xl);
+  padding-top: var(--space-xl);
+  padding-bottom: var(--space-3xl);
+  max-width: 1200px;
+}
+
+/* Catalog lives inside hero: tuck grid under copy/checkout */
+.card-shop-hero-catalog.card-shop-page-inner {
+  position: relative;
+  z-index: 1;
+  padding-top: var(--space-sm);
+  gap: 0;
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* ----- Hero: same radial layers as .landing-hero-bg ----- */
+.card-shop-hero {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: stretch;
+  overflow-x: visible;
+  overflow-y: visible;
+  min-height: 0;
+  padding: var(--space-lg) 0 var(--space-2xl);
+}
+
+.card-shop-hero-bg {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  background:
+    radial-gradient(ellipse 85% 60% at 50% 0%, rgba(192, 99, 255, 0.18) 0%, transparent 55%),
+    radial-gradient(ellipse 70% 50% at 72% 35%, rgba(252, 109, 137, 0.12) 0%, transparent 50%),
+    radial-gradient(ellipse 55% 45% at 28% 55%, rgba(61, 180, 242, 0.14) 0%, transparent 48%),
+    linear-gradient(180deg, var(--bg-primary) 0%, var(--bg-secondary) 50%, var(--bg-primary) 100%);
+}
+
+[data-theme="light"] .card-shop-hero-bg {
+  background:
+    radial-gradient(ellipse 85% 60% at 50% 0%, rgba(192, 99, 255, 0.1) 0%, transparent 55%),
+    radial-gradient(ellipse 70% 50% at 72% 35%, rgba(252, 109, 137, 0.08) 0%, transparent 50%),
+    radial-gradient(ellipse 55% 45% at 28% 55%, rgba(61, 180, 242, 0.1) 0%, transparent 48%),
+    linear-gradient(180deg, #f0f4fb 0%, #ffffff 45%, #eef2f8 100%);
+}
+
+.card-shop-hero-stack {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0;
+  width: 100%;
+}
+
+/* No card slab: transparent panel, centered column like landing hero */
+.card-shop-hero-panel {
+  width: 100%;
+  max-width: 900px;
+  margin: 0 auto;
+  padding: var(--space-md) 0 var(--space-xs);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  border-radius: 0;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+.card-shop-hero-landing-inner.landing-hero-inner {
+  margin-bottom: 0;
+  width: 100%;
+}
+
+/* ----- Checkout bar (same slot as former “Check out” CTA, under lede) ----- */
+.card-shop-hero-checkout-row {
+  width: 100%;
+  max-width: 520px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.card-shop-hero-checkout-row .card-shop-checkout-bar {
+  margin: 0;
+  width: 100%;
+}
+
+.card-shop-checkout-bar-inner {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  padding: 10px;
+  border-radius: var(--radius-full);
+  background: rgba(0, 0, 0, 0.42);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.35);
+}
+
+[data-theme="light"] .card-shop-checkout-bar-inner {
+  background: rgba(255, 255, 255, 0.65);
+  border-color: rgba(0, 0, 0, 0.08);
+  box-shadow: 0 4px 20px rgba(15, 23, 42, 0.06);
+}
+
+@media (min-width: 560px) {
+  .card-shop-checkout-bar-inner {
+    flex-direction: row;
+    align-items: center;
+    gap: var(--space-sm);
+    padding: 8px 8px 8px 18px;
+  }
+}
+
+.card-shop-checkout-input {
+  flex: 1;
+  min-width: 0;
+  padding: 12px 8px;
+  border: none;
+  background: transparent;
+  color: var(--text-primary);
+  font-family: var(--font-primary);
+  font-size: 1rem;
+  outline: none;
+}
+
+.card-shop-checkout-input::placeholder {
+  color: var(--text-muted);
+}
+
+.card-shop-checkout-submit {
+  flex-shrink: 0;
+  padding: 12px 28px;
+  border: none;
+  border-radius: var(--radius-full);
+  font-family: var(--font-primary);
+  font-size: 0.9rem;
+  font-weight: 800;
+  cursor: pointer;
+  color: #fff;
+  background: linear-gradient(135deg, var(--anilist-pink) 0%, var(--anilist-purple) 50%, var(--anilist-blue) 100%);
+  background-size: 180% 180%;
+  box-shadow: 0 8px 28px rgba(192, 99, 255, 0.4);
+  transition: transform 0.2s, box-shadow 0.2s, opacity 0.2s;
+}
+
+.card-shop-checkout-submit:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 36px rgba(61, 180, 242, 0.35);
+}
+
+.card-shop-checkout-submit:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* ----- Product grid ----- */
+.card-shop-grid {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(1, 1fr);
+  gap: var(--space-lg);
+}
+
+@media (min-width: 560px) {
+  .card-shop-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 900px) {
+  .card-shop-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (min-width: 1100px) {
+  .card-shop-grid {
+    grid-template-columns: repeat(4, 1fr);
+    gap: var(--space-xl);
+  }
+}
+
+.card-shop-product {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  padding: 0;
+  text-align: left;
+  cursor: pointer;
+  border: none;
+  border-radius: 0;
+  background: var(--bg-secondary);
+  color: inherit;
+  font: inherit;
+  overflow: hidden;
+  box-shadow: 0 2px 12px var(--shadow-color);
+  border: 1px solid var(--border-color);
+  transition:
+    border-color 0.2s,
+    box-shadow 0.2s,
+    transform 0.2s;
+}
+
+.card-shop-product:hover {
+  border-color: rgba(252, 109, 137, 0.45);
+  box-shadow: 0 8px 28px rgba(252, 109, 137, 0.14);
+}
+
+.card-shop-product--selected {
+  border-color: rgba(252, 109, 137, 0.55);
+  box-shadow:
+    0 0 0 2px rgba(252, 109, 137, 0.22),
+    0 12px 32px rgba(252, 109, 137, 0.18);
+}
+
+.card-shop-product-well {
+  position: relative;
+  aspect-ratio: 1;
+  background: rgba(139, 170, 196, 0.12);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+[data-theme="light"] .card-shop-product-well {
+  background: #f0f3f7;
+}
+
+[data-theme="dark"] .card-shop-product-well {
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.card-shop-product-thumb {
+  width: 72%;
+  height: 88%;
+  max-height: 220px;
+  background-size: contain;
+  background-position: center;
+  background-repeat: no-repeat;
+  display: block;
+}
+
+.card-shop-product-icon {
+  position: absolute;
+  right: 12px;
+  bottom: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 0;
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
+  box-shadow: 0 4px 12px var(--shadow-color);
+}
+
+.card-shop-product-body {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: var(--space-md);
+  align-items: stretch;
+}
+
+.card-shop-product-title-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-sm);
+}
+
+.card-shop-product-title {
+  font-size: 0.95rem;
+  font-weight: 800;
+  line-height: 1.25;
+  color: var(--text-primary);
+}
+
+.card-shop-product-desc {
+  font-size: 0.8rem;
+  line-height: 1.45;
+  color: var(--text-muted);
+  min-height: 2.4em;
+}
+
+.card-shop-product-cta {
+  margin-top: var(--space-sm);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px 16px;
+  border-radius: 0;
+  font-size: 0.8rem;
+  font-weight: 700;
+  border: 2px solid var(--anilist-pink);
+  background: rgba(5, 12, 22, 0.82);
+  color: #fff;
+  transition: background 0.2s, color 0.2s, border-color 0.2s;
+  pointer-events: none;
+}
+
+[data-theme="light"] .card-shop-product-cta {
+  background: #1a2836;
+}
+
+.card-shop-product--selected .card-shop-product-cta,
+.card-shop-product-cta--active {
+  border-color: transparent;
+  background: var(--anilist-pink);
+  color: #fff;
+}
+
+.app--card-shop .app-footer {
+  margin-top: auto;
+}
+
+/* ── Disabled / locked pack tile ── */
+.card-shop-product--disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+.card-shop-product--disabled:hover {
+  border-color: var(--border-color);
+  box-shadow: 0 2px 12px var(--shadow-color);
+}
+
+/* Shimmer animation on locked tiles */
+.card-shop-product-shimmer {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  background: linear-gradient(
+    105deg,
+    transparent 40%,
+    rgba(255, 255, 255, 0.07) 50%,
+    transparent 60%
+  );
+  background-size: 200% 100%;
+  animation: csp-shimmer 1.6s linear infinite;
+}
+
+@keyframes csp-shimmer {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* "No matches" badge on empty tiles */
+.card-shop-product-empty-badge {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  padding: 3px 8px;
+  border-radius: 99px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  background: rgba(252, 109, 137, 0.18);
+  color: #fc6d89;
+  border: 1px solid rgba(252, 109, 137, 0.3);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+/* Inline form error */
+.card-shop-inline-error {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 8px 4px 0;
+  font-size: 0.82rem;
+  color: #fc6d89;
+}
+
+/* Checkout button variant (when profile ready) */
+.card-shop-checkout-submit--checkout {
+  background: linear-gradient(135deg, #fc6d89 0%, #c063ff 60%, #3db4f2 100%);
+  animation: csp-btn-pulse 2.5s ease-in-out infinite;
+}
+
+@keyframes csp-btn-pulse {
+  0%, 100% { box-shadow: 0 8px 28px rgba(192, 99, 255, 0.4); }
+  50%       { box-shadow: 0 8px 36px rgba(252, 109, 137, 0.5); }
+}

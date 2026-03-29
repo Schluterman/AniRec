@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import type { StreamingServiceId } from '../types/anime';
 
 interface StreamingIconProps {
@@ -7,7 +8,7 @@ interface StreamingIconProps {
 }
 
 export function StreamingIcon({ serviceId, size = 24, className = '' }: StreamingIconProps) {
-  const icons: Record<StreamingServiceId, JSX.Element> = {
+  const icons: Record<StreamingServiceId, ReactNode> = {
     // Crunchyroll - stylized swirl logo
     crunchyroll: (
       <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor" className={className}>

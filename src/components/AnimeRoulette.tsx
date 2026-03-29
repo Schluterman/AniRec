@@ -1,30 +1,50 @@
-import { useState, useCallback, useRef } from 'react';
+import { useState, useCallback, useRef, useMemo, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import type { Media } from '../types/anime';
 import type { ProcessedUserData } from '../hooks/useAnimeData';
 import { calculateMatchScore } from '../hooks/useAnimeData';
 import { getStreamingServicesForAnime } from '../api/anilist';
+import type { PackArtUrls } from '../data/packAssets';
 import './AnimeRoulette.css';
 
 interface AnimeRouletteProps {
   anime: Media[];
   processedData: ProcessedUserData | null;
   isLoading: boolean;
+  packArt: PackArtUrls;
   onAnimeClick?: (anime: Media) => void;
   onThumbsUp?: (anime: Media) => void;
   onThumbsDown?: (anime: Media) => void;
+  /** When true, opens one pack automatically once the pool is ready (e.g. after Card Market checkout). */
+  autoOpenPackOnce?: boolean;
+  onDismissCheckoutOverlay?: () => void;
+  onSwitchPack?: () => void;
+  /** When true, shows description + all genres, hides View Details button. */
+  expandedReveal?: boolean;
 }
 
 // Animation states
 type PackState = 'PACK_IDLE' | 'PACK_TENSION' | 'PACK_TEARING' | 'PACK_OPENING' | 'CARD_REVEAL' | 'POST_REVEAL';
 
+/** Deterministic jitter in [0, 1) for motion props (pure; avoids Math.random during render). */
+function motionJitter(i: number, salt: number): number {
+  const x = Math.sin(i * 12.9898 + salt * 43758.5453) * 43758.5453;
+  return x - Math.floor(x);
+}
+
 export function AnimeRoulette({
   anime,
   processedData,
   isLoading,
+  packArt,
   onAnimeClick,
   onThumbsUp,
   onThumbsDown,
+  autoOpenPackOnce = false,
+  onDismissCheckoutOverlay,
+  onSwitchPack,
+  expandedReveal = false,
 }: AnimeRouletteProps) {
   const [packState, setPackState] = useState<PackState>('PACK_IDLE');
   const [selectedAnime, setSelectedAnime] = useState<Media | null>(null);
@@ -42,7 +62,15 @@ export function AnimeRoulette({
   const hasDragged = useRef(false);
   const swipeDirection = useRef<'horizontal' | 'vertical' | null>(null);
   const DRAG_THRESHOLD = 8; // pixels before it counts as a drag
-  const SWIPE_OPEN_THRESHOLD = 120; // pixels to swipe up to open the pack
+  const [isNarrowViewport, setIsNarrowViewport] = useState(false);
+  useEffect(() => {
+    const mq = window.matchMedia('(max-width: 640px)');
+    const apply = () => setIsNarrowViewport(mq.matches);
+    apply();
+    mq.addEventListener('change', apply);
+    return () => mq.removeEventListener('change', apply);
+  }, []);
+  const SWIPE_OPEN_THRESHOLD = isNarrowViewport ? 88 : 120;
 
   // Check for reduced motion preference
   const prefersReducedMotion = typeof window !== 'undefined'
@@ -99,7 +127,62 @@ export function AnimeRoulette({
     setSelectedAnime(null);
     setPackRotation(0);
     setShowSavedToast(false);
+    onDismissCheckoutOverlay?.();
+  }, [onDismissCheckoutOverlay]);
+
+  const autoOpenFiredRef = useRef(false);
+  useEffect(() => {
+    if (!autoOpenPackOnce || autoOpenFiredRef.current) return;
+    if (isLoading || filteredAnime.length === 0 || packState !== 'PACK_IDLE') return;
+    autoOpenFiredRef.current = true;
+    queueMicrotask(() => {
+      openPack();
+    });
+  }, [autoOpenPackOnce, isLoading, filteredAnime.length, packState, openPack]);
+
+  const nextPullPendingRef = useRef(false);
+  useEffect(() => {
+    if (!nextPullPendingRef.current) return;
+    if (packState !== 'PACK_IDLE') return;
+    if (filteredAnime.length === 0) {
+      nextPullPendingRef.current = false;
+      return;
+    }
+    nextPullPendingRef.current = false;
+    queueMicrotask(() => {
+      openPack();
+    });
+  }, [packState, filteredAnime.length, openPack]);
+
+  const handleNextCard = useCallback(
+    (e: React.MouseEvent) => {
+      e.stopPropagation();
+      if (!selectedAnime) return;
+      onThumbsDown?.(selectedAnime);
+      nextPullPendingRef.current = true;
+      resetPack();
+    },
+    [selectedAnime, onThumbsDown, resetPack]
+  );
+
+  // Checkout-flow only: draw again without dismissing the overlay or penalising the current card
+  const handleDrawAgain = useCallback((e: React.MouseEvent) => {
+    e.stopPropagation();
+    nextPullPendingRef.current = true;
+    setPackState('PACK_IDLE');
+    setSelectedAnime(null);
+    setPackRotation(0);
+    setShowSavedToast(false);
   }, []);
+
+  const handleSwitchPack = useCallback(
+    (e: React.MouseEvent) => {
+      e.stopPropagation();
+      onDismissCheckoutOverlay?.();
+      onSwitchPack?.();
+    },
+    [onDismissCheckoutOverlay, onSwitchPack]
+  );
 
   const handleThumbsUp = useCallback((e: React.MouseEvent) => {
     e.stopPropagation();
@@ -156,7 +239,7 @@ export function AnimeRoulette({
       const newRotation = rotationStart.current + (deltaX * 0.5);
       setPackRotation(newRotation);
     }
-  }, [isMouseDown, isDragging]);
+  }, [isMouseDown, SWIPE_OPEN_THRESHOLD]);
 
   const handleDragEnd = useCallback(() => {
     const wasDragging = hasDragged.current;
@@ -219,14 +302,30 @@ export function AnimeRoulette({
     }
   }, [handleDragEnd, packState, openPack]);
 
+  const packCssVars = useMemo(
+    () =>
+      ({
+        '--pack-front': `url("${packArt.front}")`,
+        '--pack-back': `url("${packArt.back}")`,
+        '--pack-edge': `url("${packArt.edge}")`,
+        '--pack-foil-mask': `url("${packArt.foilMask}")`,
+        '--pack-tear-mask': `url("${packArt.tearMask}")`,
+        '--pack-front-mask': `url("${packArt.frontMask}")`,
+      }) as React.CSSProperties,
+    [packArt]
+  );
+
+  const particleCount = isNarrowViewport ? 10 : 16;
+  const confettiCount = isNarrowViewport ? 14 : 24;
+
   if (isLoading) {
     return (
-      <section className="anime-roulette">
+      <section className="anime-roulette" style={packCssVars}>
         <div className="pack-loading">
           <div className="loading-pack">
             <div className="pack-face" />
           </div>
-          <p className="loading-text">Consulting the anime gods...</p>
+          <p className="loading-text">Stocking the shelf…</p>
         </div>
       </section>
     );
@@ -249,7 +348,7 @@ export function AnimeRoulette({
     })?.media;
 
   return (
-    <section className="anime-roulette">
+    <section className="anime-roulette" style={packCssVars}>
       {/* Pack Container */}
       <div className="pack-container">
         <AnimatePresence mode="wait">
@@ -260,16 +359,28 @@ export function AnimeRoulette({
               className="pack-stage"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              exit={{ opacity: 0, scale: 1.1 }}
-              transition={{ duration: 0.3 }}
+              exit={
+                prefersReducedMotion
+                  ? { opacity: 0 }
+                  : { opacity: 0, scale: 1.12, transition: { type: 'spring', stiffness: 280, damping: 22 } }
+              }
+              transition={
+                prefersReducedMotion
+                  ? { duration: 0.2 }
+                  : { type: 'spring', stiffness: 320, damping: 28, mass: 0.9 }
+              }
             >
               {/* Flash effect during opening */}
               {packState === 'PACK_OPENING' && (
                 <motion.div
                   className="pack-flash"
                   initial={{ opacity: 0 }}
-                  animate={{ opacity: [0, 0.7, 0] }}
-                  transition={{ duration: 0.35, times: [0, 0.3, 1] }}
+                  animate={{ opacity: [0, 0.85, 0] }}
+                  transition={
+                    prefersReducedMotion
+                      ? { duration: 0.25, times: [0, 0.35, 1] }
+                      : { duration: 0.3, times: [0, 0.22, 1], ease: ['easeOut', 'easeIn'] }
+                  }
                 />
               )}
 
@@ -297,17 +408,33 @@ export function AnimeRoulette({
                     rotate: swipeProgress > 0.5
                       ? [0, -1, 1, -1, 1, 0]
                       : 0,
-                  } : packState === 'PACK_TENSION' ? {
-                    rotate: [-1.5, 1.5, -2, 2, -1, 1, 0],
-                    x: [-4, 4, -6, 6, -3, 3, 0],
-                    scale: [1, 1.02, 1.01, 1.03, 1.02, 1.04, 1.08],
-                  } : packState === 'PACK_TEARING' ? {
-                    scale: 1.08,
-                  } : packState === 'PACK_OPENING' ? {
-                    scale: [1.08, 1.15, 0.8],
-                    y: [0, -40, 150],
-                    opacity: [1, 1, 0],
-                  } : {}
+                  } : packState === 'PACK_TENSION' ? (
+                    prefersReducedMotion
+                      ? {
+                          rotate: [-1.5, 1.5, -2, 2, -1, 1, 0],
+                          x: [-4, 4, -6, 6, -3, 3, 0],
+                          scale: [1, 1.02, 1.01, 1.03, 1.02, 1.04, 1.08],
+                        }
+                      : {
+                          rotate: [-2, 2, -2.8, 2.8, -1.8, 1.8, 0],
+                          x: [-6, 6, -9, 9, -4, 4, 0],
+                          scale: [1, 0.97, 1.04, 1.02, 1.06, 1.04, 1.12],
+                        }
+                  ) : packState === 'PACK_TEARING' ? {
+                    scale: prefersReducedMotion ? 1.08 : 1.1,
+                  } : packState === 'PACK_OPENING' ? (
+                    prefersReducedMotion
+                      ? {
+                          scale: [1.08, 1.15, 0.8],
+                          y: [0, -40, 150],
+                          opacity: [1, 1, 0],
+                        }
+                      : {
+                          scale: [1.08, 1.24, 0.72],
+                          y: [0, -56, 172],
+                          opacity: [1, 1, 0],
+                        }
+                  ) : {}
                 }
                 transition={
                   packState === 'PACK_IDLE' ? {
@@ -316,29 +443,39 @@ export function AnimeRoulette({
                       : isDragging ? { duration: 0 } : { duration: 2.5, repeat: Infinity, ease: "easeInOut" },
                     scale: swipeProgress > 0 ? { duration: 0 } : { duration: 0.25 },
                     rotate: swipeProgress > 0.5 ? { duration: 0.15, repeat: Infinity } : { duration: 0 },
-                  } : packState === 'PACK_TENSION' ? {
-                    duration: 0.55,
-                    ease: "easeInOut",
-                  } : packState === 'PACK_TEARING' ? {
-                    duration: 0.1,
-                  } : packState === 'PACK_OPENING' ? {
-                    duration: 0.35,
-                    ease: "easeOut",
-                  } : {}
+                  } : packState === 'PACK_TENSION' ? (
+                    prefersReducedMotion
+                      ? { duration: 0.55, ease: "easeInOut" }
+                      : { type: 'spring', stiffness: 400, damping: 17, mass: 0.88 }
+                  ) : packState === 'PACK_TEARING' ? (
+                    prefersReducedMotion
+                      ? { duration: 0.1 }
+                      : { type: 'spring', stiffness: 340, damping: 22 }
+                  ) : packState === 'PACK_OPENING' ? (
+                    prefersReducedMotion
+                      ? { duration: 0.35, ease: "easeOut" }
+                      : {
+                          duration: 0.5,
+                          times: [0, 0.3, 1],
+                          ease: ['easeInOut', [0.22, 1, 0.36, 1]],
+                        }
+                  ) : {}
                 }
               >
                 {/* 3D Pack with separate front/back images */}
                 <div
                   className="pack-3d"
                   style={{
+                    ...packCssVars,
                     transform: `rotateY(${packRotation}deg)`,
-                    transition: isDragging ? 'none' : 'transform 0.3s ease-out'
+                    transition: isDragging ? 'none' : 'transform 0.3s ease-out',
                   }}
                 >
                   {/* Non-tearing view */}
                   {packState !== 'PACK_TEARING' && (
                     <>
                       <div className="pack-face pack-front" />
+                      <div className="pack-face pack-spine" aria-hidden />
                       <div className="pack-face pack-back" />
 
                       {/* Premium Foil Layer - clipped to pack shape */}
@@ -366,10 +503,11 @@ export function AnimeRoulette({
                           rotateZ: -3,
                           opacity: [1, 1, 0.6]
                         }}
-                        transition={{
-                          duration: 0.55,
-                          ease: [0.22, 1, 0.36, 1]
-                        }}
+                        transition={
+                          prefersReducedMotion
+                            ? { duration: 0.55, ease: [0.22, 1, 0.36, 1] }
+                            : { duration: 0.52, ease: [0.17, 1, 0.32, 1.02] }
+                        }
                       />
 
                       {/* Right torn half */}
@@ -382,10 +520,11 @@ export function AnimeRoulette({
                           rotateZ: 3,
                           opacity: [1, 1, 0.6]
                         }}
-                        transition={{
-                          duration: 0.55,
-                          ease: [0.22, 1, 0.36, 1]
-                        }}
+                        transition={
+                          prefersReducedMotion
+                            ? { duration: 0.55, ease: [0.22, 1, 0.36, 1] }
+                            : { duration: 0.52, ease: [0.17, 1, 0.32, 1.02] }
+                        }
                       >
                         <div className="pack-tear-right" />
                       </motion.div>
@@ -415,8 +554,8 @@ export function AnimeRoulette({
                           animate={{
                             opacity: [0, 1, 1, 0],
                             scale: [0, 1.2, 1, 0.5],
-                            x: (i % 2 === 0 ? 1 : -1) * (30 + Math.random() * 60),
-                            y: (Math.random() - 0.5) * 30,
+                            x: (i % 2 === 0 ? 1 : -1) * (30 + motionJitter(i, 0) * 60),
+                            y: (motionJitter(i, 1) - 0.5) * 30,
                           }}
                           transition={{
                             duration: 0.5,
@@ -468,7 +607,7 @@ export function AnimeRoulette({
                       }}
                     />
                     <span className="swipe-text">
-                      {swipeProgress >= 0.8 ? '✨ Release!' : '↑ Swipe'}
+                      {swipeProgress >= 0.8 ? 'Release!' : 'Swipe up'}
                     </span>
                   </motion.div>
                 )}
@@ -482,7 +621,10 @@ export function AnimeRoulette({
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.3 }}
                 >
-                  <span className="cta-disabled-text">No anime match filters</span>
+                  <span className="cta-disabled-text">No titles in this booster pool—try another pack</span>
+                  <Link to="/card-shop" className="pack-empty-market-link">
+                    Pick another pack at the Card Market
+                  </Link>
                 </motion.div>
               )}
 
@@ -518,7 +660,7 @@ export function AnimeRoulette({
             >
               {/* Particles/Sparkles */}
               <div className="reveal-particles">
-                {[...Array(16)].map((_, i) => (
+                {[...Array(particleCount)].map((_, i) => (
                   <motion.div
                     key={i}
                     className="particle"
@@ -531,8 +673,8 @@ export function AnimeRoulette({
                     animate={{
                       opacity: [0, 1, 0],
                       scale: [0, 1.2, 0.5],
-                      x: (Math.random() - 0.5) * 350,
-                      y: (Math.random() - 0.5) * 350,
+                      x: (motionJitter(i, 2) - 0.5) * 350,
+                      y: (motionJitter(i, 3) - 0.5) * 350,
                     }}
                     transition={{
                       duration: 1.8,
@@ -543,22 +685,22 @@ export function AnimeRoulette({
                 ))}
               </div>
 
-              {/* The Revealed Card */}
-              <motion.div
-                className="revealed-card"
-                initial={{ scale: 0.4, rotateY: -180, opacity: 0 }}
-                animate={{
-                  scale: 1,
-                  rotateY: 0,
-                  opacity: 1,
-                }}
-                transition={{
-                  type: "spring",
-                  stiffness: 200,
-                  damping: 20,
-                }}
-                onClick={() => onAnimeClick?.(selectedAnime)}
-              >
+                {/* The Revealed Card */}
+                <motion.div
+                  className={`revealed-card${expandedReveal ? ' revealed-card--expanded' : ''}`}
+                  initial={{ scale: 0.4, rotateY: -180, opacity: 0 }}
+                  animate={{
+                    scale: 1,
+                    rotateY: 0,
+                    opacity: 1,
+                  }}
+                  transition={{
+                    type: "spring",
+                    stiffness: 200,
+                    damping: 20,
+                  }}
+                  onClick={expandedReveal ? undefined : () => onAnimeClick?.(selectedAnime)}
+                >
                 {/* Glowing Border */}
                 <div className="card-glow-border" />
 
@@ -586,6 +728,7 @@ export function AnimeRoulette({
                     )}
                   </div>
 
+                  <div className="card-details-panel">
                   {/* Card Info */}
                   <motion.div
                     className="card-info"
@@ -604,7 +747,7 @@ export function AnimeRoulette({
                     </div>
 
                     <div className="card-genres">
-                      {selectedAnime.genres.slice(0, 3).map(genre => (
+                      {(expandedReveal ? selectedAnime.genres : selectedAnime.genres.slice(0, 3)).map(genre => (
                         <span key={genre} className="genre-tag">{genre}</span>
                       ))}
                     </div>
@@ -612,6 +755,13 @@ export function AnimeRoulette({
                     {becauseYouLiked && (
                       <p className="because-line">
                         Because you liked <strong>{becauseYouLiked.title.english || becauseYouLiked.title.romaji}</strong>
+                      </p>
+                    )}
+
+                    {expandedReveal && selectedAnime.description && (
+                      <p className="card-description">
+                        {selectedAnime.description.replace(/<[^>]*>/g, '').slice(0, 240)}
+                        {selectedAnime.description.replace(/<[^>]*>/g, '').length > 240 ? '…' : ''}
                       </p>
                     )}
 
@@ -674,16 +824,69 @@ export function AnimeRoulette({
                     >
                       Open in AniList
                     </a>
-                    <button
-                      className="action-btn secondary"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        onAnimeClick?.(selectedAnime);
-                      }}
-                    >
-                      View Details
-                    </button>
+                    {!expandedReveal && (
+                      <button
+                        className="action-btn secondary"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onAnimeClick?.(selectedAnime);
+                        }}
+                      >
+                        View Details
+                      </button>
+                    )}
                   </motion.div>
+
+                  {packState === 'POST_REVEAL' && (
+                    <motion.div
+                      className="post-reveal-nav"
+                      initial={{ opacity: 0, y: 8 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.72 }}
+                    >
+                      {autoOpenPackOnce ? (
+                        /* Checkout flow: Draw Again + Change Pack */
+                        <>
+                          <button
+                            type="button"
+                            className="post-reveal-btn post-reveal-btn--ghost"
+                            onClick={handleSwitchPack}
+                          >
+                            Change Pack
+                          </button>
+                          <button
+                            type="button"
+                            className="post-reveal-btn post-reveal-btn--primary"
+                            onClick={handleDrawAgain}
+                          >
+                            Draw Again
+                          </button>
+                        </>
+                      ) : (
+                        /* Normal flow: Switch pack + Next card */
+                        <>
+                          {onSwitchPack ? (
+                            <button
+                              type="button"
+                              className="post-reveal-btn post-reveal-btn--ghost"
+                              onClick={handleSwitchPack}
+                            >
+                              Switch pack
+                            </button>
+                          ) : null}
+                          {onThumbsDown ? (
+                            <button
+                              type="button"
+                              className="post-reveal-btn post-reveal-btn--primary"
+                              onClick={handleNextCard}
+                            >
+                              Next card
+                            </button>
+                          ) : null}
+                        </>
+                      )}
+                    </motion.div>
+                  )}
 
                   {/* Saved Toast */}
                   <AnimatePresence>
@@ -702,6 +905,7 @@ export function AnimeRoulette({
                       </motion.div>
                     )}
                   </AnimatePresence>
+                  </div>{/* end .card-details-panel */}
                 </div>
 
                 {/* Foil Shimmer Overlay */}
@@ -709,15 +913,15 @@ export function AnimeRoulette({
 
                 {/* Confetti */}
                 <div className="confetti-container">
-                  {Array.from({ length: 24 }).map((_, i) => (
+                  {Array.from({ length: confettiCount }).map((_, i) => (
                     <motion.div
                       key={i}
                       className="confetti-piece"
                       initial={{ y: 0, x: 0, rotate: 0, opacity: 1 }}
                       animate={{
                         y: [0, -180, 350],
-                        x: (Math.random() - 0.5) * 450,
-                        rotate: Math.random() * 720 - 360,
+                        x: (motionJitter(i, 4) - 0.5) * 450,
+                        rotate: motionJitter(i, 5) * 720 - 360,
                         opacity: [1, 1, 0]
                       }}
                       transition={{
@@ -728,27 +932,34 @@ export function AnimeRoulette({
                       style={{
                         left: '50%',
                         background: ['#3db4f2', '#fc6d89', '#4cca51', '#ef881a', '#c063ff'][i % 5],
-                        width: Math.random() * 10 + 5,
-                        height: Math.random() * 10 + 5,
+                        width: motionJitter(i, 6) * 10 + 5,
+                        height: motionJitter(i, 7) * 10 + 5,
                       }}
                     />
                   ))}
                 </div>
               </motion.div>
 
-              {/* Another Pull Button */}
-              <motion.button
-                className="another-pull-btn"
-                onClick={resetPack}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.8 }}
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-              >
-                <span>🎲</span>
-                Another Pull
-              </motion.button>
+              {/* Another Pull Button — hidden in checkout flow (Draw Again in post-reveal-nav handles it) */}
+              {!autoOpenPackOnce && (
+                <motion.button
+                  className="another-pull-btn"
+                  onClick={resetPack}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.8 }}
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                >
+                  <svg className="another-pull-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
+                    <rect x="3" y="3" width="18" height="18" rx="2" />
+                    <circle cx="8.5" cy="8.5" r="1.5" fill="currentColor" stroke="none" />
+                    <circle cx="15.5" cy="15.5" r="1.5" fill="currentColor" stroke="none" />
+                    <path d="M15 9h.01M9 15h.01" />
+                  </svg>
+                  Another Pull
+                </motion.button>
+              )}
             </motion.div>
           )}
         </AnimatePresence>

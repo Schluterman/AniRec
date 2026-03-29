@@ -1,0 +1,203 @@
+.pack-shop {
+  position: relative;
+  padding: var(--space-lg) var(--space-xl);
+  background: linear-gradient(
+    165deg,
+    rgba(21, 31, 46, 0.96) 0%,
+    rgba(11, 22, 34, 0.98) 45%,
+    rgba(18, 28, 48, 0.96) 100%
+  );
+  border-radius: 0;
+  border: 1px solid rgba(252, 109, 137, 0.2);
+  box-shadow:
+    0 0 0 1px rgba(0, 0, 0, 0.2),
+    0 12px 40px rgba(0, 0, 0, 0.35);
+}
+
+[data-theme="light"] .pack-shop {
+  background: linear-gradient(165deg, rgba(255, 255, 255, 0.95), rgba(237, 242, 250, 0.98));
+  border-color: rgba(252, 109, 137, 0.22);
+  box-shadow: 0 8px 32px rgba(15, 23, 42, 0.08);
+}
+
+.pack-shop--compact {
+  padding: var(--space-md);
+  border-radius: 0;
+  box-shadow: none;
+  border: none;
+  background: transparent;
+}
+
+.pack-shop-header {
+  margin-bottom: var(--space-md);
+}
+
+.pack-shop-title {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  margin: 0 0 var(--space-xs);
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--anilist-pink);
+}
+
+.pack-shop-title svg {
+  flex-shrink: 0;
+  opacity: 0.9;
+}
+
+.pack-shop-sub {
+  margin: 0;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  line-height: 1.45;
+}
+
+.pack-shop-grid {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.pack-sku {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  width: 100%;
+  padding: 10px 12px;
+  text-align: left;
+  cursor: pointer;
+  border-radius: 0;
+  border: 1px solid rgba(252, 109, 137, 0.15);
+  background: rgba(0, 0, 0, 0.2);
+  color: inherit;
+  font: inherit;
+  transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
+}
+
+[data-theme="light"] .pack-sku {
+  background: rgba(255, 255, 255, 0.6);
+  border-color: rgba(15, 23, 42, 0.08);
+}
+
+.pack-sku:hover {
+  border-color: rgba(252, 109, 137, 0.45);
+  box-shadow: 0 0 20px rgba(252, 109, 137, 0.1);
+}
+
+.pack-sku--selected {
+  border-color: rgba(252, 109, 137, 0.6);
+  background: rgba(252, 109, 137, 0.08);
+  box-shadow: 0 0 0 2px rgba(252, 109, 137, 0.22);
+}
+
+.pack-sku-visual {
+  position: relative;
+  flex-shrink: 0;
+  width: 52px;
+  height: 72px;
+}
+
+.pack-sku-thumb {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border-radius: 0;
+  background-size: cover;
+  background-position: center;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.35);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.pack-sku-badge {
+  position: absolute;
+  right: -6px;
+  bottom: -4px;
+  width: 32px;
+  height: 32px;
+  border-radius: 0;
+  background: var(--bg-secondary);
+  border: 2px solid rgba(252, 109, 137, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+}
+
+.pack-sku-copy {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  min-width: 0;
+}
+
+.pack-sku-title {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.pack-sku-sub {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+}
+
+.pack-sku-meta {
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: var(--anilist-pink);
+  margin-top: 4px;
+}
+
+.pack-shop-footer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-sm);
+  margin-top: var(--space-md);
+  padding-top: var(--space-md);
+  border-top: 1px solid rgba(252, 109, 137, 0.12);
+}
+
+.pack-shop-count {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.pack-shop-reset {
+  padding: 6px 12px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  cursor: pointer;
+  border-radius: 0;
+  border: 2px solid var(--anilist-pink);
+  background: rgba(5, 12, 22, 0.82);
+  color: #fff;
+  font-family: var(--font-primary);
+  transition: background 0.2s, border-color 0.2s;
+}
+
+[data-theme="light"] .pack-shop-reset {
+  background: #1a2836;
+}
+
+.pack-shop-reset:hover {
+  background: rgba(252, 109, 137, 0.15);
+  border-color: rgba(252, 109, 137, 0.85);
+}
+
+/* Sidebar: hide shop on small screens — mobile uses BoosterSheet */
+@media (max-width: 900px) {
+  .pack-shop--sidebar-only {
+    display: none;
+  }
+}
