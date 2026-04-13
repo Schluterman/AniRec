@@ -40,13 +40,6 @@ export function StreamingIcon({ serviceId, size = 24, className = '' }: Streamin
         <text x="12" y="15" fontSize="7" fontWeight="bold" textAnchor="middle" fill="white" fontFamily="sans-serif">hu</text>
       </svg>
     ),
-    // Disney+ - D with plus
-    disney: (
-      <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor" className={className}>
-        <path d="M4 4h8c4.42 0 8 3.58 8 8s-3.58 8-8 8H4V4zm4 12h4c2.21 0 4-1.79 4-4s-1.79-4-4-4H8v8z" />
-        <path d="M19 8h2v2h-2zM19 11h2v2h-2zM17 10h2v2h-2z" />
-      </svg>
-    ),
   };
 
   return icons[serviceId] || null;

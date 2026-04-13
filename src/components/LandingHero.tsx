@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import type { ActivePackId } from '../types/packs';
 import { getPackArt } from '../data/packAssets';
@@ -27,7 +28,26 @@ function StorefrontStrokeIcon({ size = 22 }: { size?: number }) {
   );
 }
 
+function FlipHaloIcon({ size = 44 }: { size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor" aria-hidden>
+      <path d="M12 4V1L8 5l4 4V6c3.31 0 6 2.69 6 6 0 1.01-.25 1.97-.7 2.8l1.46 1.46C19.54 15.03 20 13.57 20 12c0-4.42-3.58-8-8-8zm0 14c-3.31 0-6-2.69-6-6 0-1.01.25-1.97.7-2.8L5.24 7.74C4.46 8.97 4 10.43 4 12c0 4.42 3.58 8 8 8v3l4-4-4-4v3z" />
+    </svg>
+  );
+}
+
 export function LandingHero() {
+  const [flipped, setFlipped] = useState<Set<ActivePackId>>(new Set());
+  const [hoveredId, setHoveredId] = useState<ActivePackId | null>(null);
+
+  function toggleFlip(id: ActivePackId) {
+    setFlipped(prev => {
+      const next = new Set(prev);
+      next.has(id) ? next.delete(id) : next.add(id);
+      return next;
+    });
+  }
+
   return (
     <main className="landing-hero">
       <div className="landing-hero-bg" aria-hidden />
@@ -52,7 +72,7 @@ export function LandingHero() {
         </div>
       </div>
 
-      <div className="landing-fan-bleed" aria-hidden="true">
+      <div className="landing-fan-bleed">
         <div className="landing-fan-wrap">
           <ul className="landing-fan">
             {FAN_ORDER.map((id, i) => {
@@ -62,21 +82,48 @@ export function LandingHero() {
               const offset = i - centerIdx;
               const baseRotate = offset * 10;
               const z = 5 - Math.abs(offset) + (isCenter ? 3 : 0);
+              const isFlipped = flipped.has(id);
+              const isHovered = hoveredId === id;
+              const effectiveZ = isHovered ? 20 : z;
               return (
-                <li key={id} className="landing-fan-item">
+                <li
+                  key={id}
+                  className="landing-fan-item"
+                  style={{ zIndex: effectiveZ }}
+                  onMouseEnter={() => setHoveredId(id)}
+                  onMouseLeave={() => setHoveredId(null)}
+                >
                   <div
-                    className={`landing-fan-card ${isCenter ? 'landing-fan-card--center' : ''}`}
-                    style={{
-                      zIndex: z,
-                      transform: `rotate(${baseRotate}deg)`,
+                    className={`landing-fan-card landing-fan-card--flippable${isCenter ? ' landing-fan-card--center' : ''}`}
+                    style={{ transform: `rotate(${baseRotate}deg)` }}
+                    onClick={() => toggleFlip(id)}
+                    role="button"
+                    tabIndex={0}
+                    aria-label={isFlipped ? 'Show pack front' : 'Flip pack to see back'}
+                    onKeyDown={e => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        toggleFlip(id);
+                      }
                     }}
                   >
-                    <img
-                      className="landing-fan-card-img"
-                      src={art.front}
-                      alt=""
-                      draggable={false}
-                    />
+                    <span className="landing-fan-card-halo" aria-hidden>
+                      <FlipHaloIcon size={40} />
+                    </span>
+                    <div className={`landing-fan-card-inner${isFlipped ? ' landing-fan-card-inner--flipped' : ''}`}>
+                      <img
+                        className="landing-fan-card-face landing-fan-card-face--front"
+                        src={art.front}
+                        alt=""
+                        draggable={false}
+                      />
+                      <img
+                        className="landing-fan-card-face landing-fan-card-face--back"
+                        src={art.back}
+                        alt=""
+                        draggable={false}
+                      />
+                    </div>
                   </div>
                 </li>
               );

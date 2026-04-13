@@ -28,48 +28,42 @@ const EDGE_FALLBACK = ANIREC_BASE.edge;
 
 /** Plan-to-watch themed pack (not a streaming provider). */
 const PLANNING_FACES = {
-  front: '/planningFrontCard.png',
+  front: '/planningFrontCard-removebg-preview.png',
   edge: '/planningEdge.png',
-  back: '/planningBackCard.png',
+  back: '/planningBackCard-removebg-preview.png',
 };
 
 /**
- * Disney+ assets use a literal `+` in filenames (e.g. Disney+FrontCard.png).
- * Vite serves these from /public with that path; do not use %2B (often 404s).
+ * Platform pack art — front/edge/back per streaming service.
  */
 const PLATFORM_PACKS: Record<
   StreamingServiceId,
   Pick<PackArtUrls, 'front' | 'edge' | 'back'>
 > = {
   crunchyroll: {
-    front: '/ChrunchyrollFrontCard.png',
+    front: '/ChrunchyrollFrontCard-removebg-preview.png',
     edge: '/ChrunchyrollEdge.png',
-    back: '/ChrunchyRollBackCard.png',
+    back: '/ChrunchyRollBackCard-removebg-preview.png',
   },
   hidive: {
-    front: '/HIDIVEFrontCard.png',
+    front: '/HIDIVEFrontCard-removebg-preview.png',
     edge: '/HIDIVEEdge.png',
-    back: '/HIDIVEBackCard.png',
+    back: '/HIDIVEBackCard-removebg-preview.png',
   },
   netflix: {
-    front: '/NetflixFrontCard.png',
+    front: '/NetflixFrontCard-removebg-preview.png',
     edge: '/NetflixEdge.png',
-    back: '/NetflixBackOfCard.png',
+    back: '/NetflixBackOfCard-removebg-preview.png',
   },
   amazon: {
-    front: '/PrimeVideoFrontCard.png',
+    front: '/PrimeVideoFrontCard-removebg-preview.png',
     edge: '/PrimeVideoEdge.png',
-    back: '/PrimeVideoBackCard.png',
+    back: '/PrimeVideoBackCard-removebg-preview.png',
   },
   hulu: {
-    front: '/HuluFrontCard.png',
+    front: '/HuluFrontCard-removebg-preview.png',
     edge: '/HuluEdge.png',
-    back: '/HuluBackCard.png',
-  },
-  disney: {
-    front: '/Disney+FrontCard.png',
-    edge: '/Disney+Edge.png',
-    back: '/Disney+BackCard.png',
+    back: '/HuluBackCard-removebg-preview.png',
   },
 };
 

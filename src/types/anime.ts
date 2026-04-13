@@ -65,7 +65,6 @@ export const STREAMING_SERVICES = [
   { id: 'netflix', name: 'Netflix', color: '#E50914' },
   { id: 'amazon', name: 'Amazon Prime Video', color: '#00A8E1' },
   { id: 'hulu', name: 'Hulu', color: '#1CE783' },
-  { id: 'disney', name: 'Disney+', color: '#113CCF' },
 ] as const;
 
 export type StreamingServiceId = typeof STREAMING_SERVICES[number]['id'];
