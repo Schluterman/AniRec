@@ -315,9 +315,6 @@ export function AnimeRoulette({
     [packArt]
   );
 
-  const particleCount = isNarrowViewport ? 10 : 16;
-  const confettiCount = isNarrowViewport ? 14 : 24;
-
   if (isLoading) {
     return (
       <section className="anime-roulette" style={packCssVars}>
@@ -658,237 +655,46 @@ export function AnimeRoulette({
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
             >
-              {/* Particles/Sparkles */}
-              <div className="reveal-particles">
-                {[...Array(particleCount)].map((_, i) => (
-                  <motion.div
-                    key={i}
-                    className="particle"
-                    initial={{
-                      opacity: 0,
-                      scale: 0,
-                      x: 0,
-                      y: 0,
-                    }}
-                    animate={{
-                      opacity: [0, 1, 0],
-                      scale: [0, 1.2, 0.5],
-                      x: (motionJitter(i, 2) - 0.5) * 350,
-                      y: (motionJitter(i, 3) - 0.5) * 350,
-                    }}
-                    transition={{
-                      duration: 1.8,
-                      delay: i * 0.04,
-                      ease: "easeOut",
-                    }}
-                  />
-                ))}
-              </div>
-
-                {/* The Revealed Card */}
+              {/* Left column: card + actions */}
+              <div className="reveal-left">
                 <motion.div
-                  className={`revealed-card${expandedReveal ? ' revealed-card--expanded' : ''}`}
+                  className="revealed-card"
                   initial={{ scale: 0.4, rotateY: -180, opacity: 0 }}
-                  animate={{
-                    scale: 1,
-                    rotateY: 0,
-                    opacity: 1,
-                  }}
-                  transition={{
-                    type: "spring",
-                    stiffness: 200,
-                    damping: 20,
-                  }}
-                  onClick={expandedReveal ? undefined : () => onAnimeClick?.(selectedAnime)}
+                  animate={{ scale: 1, rotateY: 0, opacity: 1 }}
+                  transition={{ type: "spring", stiffness: 200, damping: 20 }}
                 >
-                {/* Glowing Border */}
-                <div className="card-glow-border" />
-
-                {/* Card Content */}
-                <div className="card-inner">
-                  {/* Cover Image */}
-                  <div className="card-cover">
+                  <div className="template-card">
                     <img
-                      src={selectedAnime.coverImage?.large}
+                      className="template-cover"
+                      src={selectedAnime.coverImage?.large || selectedAnime.coverImage?.medium}
                       alt={selectedAnime.title.english || selectedAnime.title.romaji}
                     />
-                    <div className="cover-overlay" />
-
-                    {/* Match Score Badge */}
-                    {matchScore !== null && (
-                      <motion.div
-                        className="match-badge"
-                        initial={{ scale: 0, rotate: -180 }}
-                        animate={{ scale: 1, rotate: 0 }}
-                        transition={{ delay: 0.5, type: "spring" }}
-                      >
-                        <span className="match-value">{matchScore}%</span>
-                        <span className="match-label">Match</span>
-                      </motion.div>
-                    )}
+                    <div className="template-title">
+                      <h3>{selectedAnime.title.english || selectedAnime.title.romaji}</h3>
+                    </div>
+                    <img className="template-frame" src="/AnimeCard.png" alt="" draggable={false} />
                   </div>
+                  <div className="card-foil" />
+                </motion.div>
 
-                  <div className="card-details-panel">
-                  {/* Card Info */}
-                  <motion.div
-                    className="card-info"
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.4 }}
-                  >
-                    <h3 className="card-title">
-                      {selectedAnime.title.english || selectedAnime.title.romaji}
-                    </h3>
-
-                    <div className="card-meta">
-                      <span>{selectedAnime.format}</span>
-                      {selectedAnime.episodes && <span>{selectedAnime.episodes} eps</span>}
-                      {selectedAnime.averageScore && <span>⭐ {selectedAnime.averageScore}%</span>}
-                    </div>
-
-                    <div className="card-genres">
-                      {(expandedReveal ? selectedAnime.genres : selectedAnime.genres.slice(0, 3)).map(genre => (
-                        <span key={genre} className="genre-tag">{genre}</span>
-                      ))}
-                    </div>
-
-                    {becauseYouLiked && (
-                      <p className="because-line">
-                        Because you liked <strong>{becauseYouLiked.title.english || becauseYouLiked.title.romaji}</strong>
-                      </p>
-                    )}
-
-                    {expandedReveal && selectedAnime.description && (
-                      <p className="card-description">
-                        {selectedAnime.description.replace(/<[^>]*>/g, '').slice(0, 240)}
-                        {selectedAnime.description.replace(/<[^>]*>/g, '').length > 240 ? '…' : ''}
-                      </p>
-                    )}
-
-                    {streamingServices.length > 0 && (
-                      <div className="streaming-row">
-                        <span className="streaming-label">Watch on:</span>
-                        {streamingServices.slice(0, 2).map(s => (
-                          <span key={s.id} className="streaming-tag" style={{ color: s.color }}>
-                            {s.name}
-                          </span>
-                        ))}
-                      </div>
-                    )}
-                  </motion.div>
-
-                  {/* Thumbs Vote */}
-                  <motion.div
-                    className="card-vote"
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.55 }}
-                  >
-                    <button
-                      className="vote-btn vote-up"
-                      onClick={handleThumbsUp}
-                      aria-label="Save to watchlist"
-                      title="Save to Watchlist"
-                    >
+                <motion.div
+                  className="reveal-actions"
+                  initial={{ opacity: 0, y: 12 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.45 }}
+                >
+                  <div className="card-vote card-vote--circles">
+                    <button className="vote-circle vote-circle--save" onClick={handleThumbsUp} aria-label="Save to watchlist" title="Save to Watchlist">
                       <svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20">
                         <path d="M2 20h2c.55 0 1-.45 1-1v-9c0-.55-.45-1-1-1H2v11zm19.83-7.12c.11-.25.17-.52.17-.8V11c0-1.1-.9-2-2-2h-5.5l.92-4.65c.05-.22.02-.46-.08-.66-.23-.45-.52-.86-.88-1.22L14 2 7.59 8.41C7.21 8.79 7 9.3 7 9.83V19c0 1.1.9 2 2 2h9c.83 0 1.54-.5 1.84-1.22l3-7.09z"/>
                       </svg>
-                      Save
                     </button>
-                    <button
-                      className="vote-btn vote-down"
-                      onClick={handleThumbsDown}
-                      aria-label="Skip this anime"
-                      title="Skip"
-                    >
+                    <button className="vote-circle vote-circle--skip" onClick={handleThumbsDown} aria-label="Skip this anime" title="Skip">
                       <svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20">
                         <path d="M22 4h-2c-.55 0-1 .45-1 1v9c0 .55.45 1 1 1h2V4zM2.17 11.12c-.11.25-.17.52-.17.8V13c0 1.1.9 2 2 2h5.5l-.92 4.65c-.05.22-.02.46.08.66.23.45.52.86.88 1.22L10 22l6.41-6.41c.38-.38.59-.89.59-1.42V5c0-1.1-.9-2-2-2H6c-.83 0-1.54.5-1.84 1.22l-3 7.09z"/>
                       </svg>
-                      Skip
                     </button>
-                  </motion.div>
-
-                  {/* Card Actions */}
-                  <motion.div
-                    className="card-actions"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ delay: 0.7 }}
-                  >
-                    <a
-                      href={`https://anilist.co/anime/${selectedAnime.id}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="action-btn primary"
-                      onClick={(e) => e.stopPropagation()}
-                    >
-                      Open in AniList
-                    </a>
-                    {!expandedReveal && (
-                      <button
-                        className="action-btn secondary"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          onAnimeClick?.(selectedAnime);
-                        }}
-                      >
-                        View Details
-                      </button>
-                    )}
-                  </motion.div>
-
-                  {packState === 'POST_REVEAL' && (
-                    <motion.div
-                      className="post-reveal-nav"
-                      initial={{ opacity: 0, y: 8 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: 0.72 }}
-                    >
-                      {autoOpenPackOnce ? (
-                        /* Checkout flow: Draw Again + Change Pack */
-                        <>
-                          <button
-                            type="button"
-                            className="post-reveal-btn post-reveal-btn--ghost"
-                            onClick={handleSwitchPack}
-                          >
-                            Change Pack
-                          </button>
-                          <button
-                            type="button"
-                            className="post-reveal-btn post-reveal-btn--primary"
-                            onClick={handleDrawAgain}
-                          >
-                            Draw Again
-                          </button>
-                        </>
-                      ) : (
-                        /* Normal flow: Switch pack + Next card */
-                        <>
-                          {onSwitchPack ? (
-                            <button
-                              type="button"
-                              className="post-reveal-btn post-reveal-btn--ghost"
-                              onClick={handleSwitchPack}
-                            >
-                              Switch pack
-                            </button>
-                          ) : null}
-                          {onThumbsDown ? (
-                            <button
-                              type="button"
-                              className="post-reveal-btn post-reveal-btn--primary"
-                              onClick={handleNextCard}
-                            >
-                              Next card
-                            </button>
-                          ) : null}
-                        </>
-                      )}
-                    </motion.div>
-                  )}
-
-                  {/* Saved Toast */}
+                  </div>
                   <AnimatePresence>
                     {showSavedToast && (
                       <motion.div
@@ -905,61 +711,78 @@ export function AnimeRoulette({
                       </motion.div>
                     )}
                   </AnimatePresence>
-                  </div>{/* end .card-details-panel */}
+                </motion.div>
+              </div>
+
+              {/* Right column: details panel */}
+              <motion.div
+                className="reveal-right"
+                initial={{ opacity: 0, x: 30 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.35, duration: 0.4 }}
+              >
+                <span className="reveal-eyebrow">Picked for you</span>
+
+                {matchScore !== null && (
+                  <div className="reveal-match">
+                    <span className="reveal-match-value">{matchScore}%</span>
+                    <span className="reveal-match-label">Match</span>
+                  </div>
+                )}
+
+                <h2 className="reveal-detail-title">
+                  {selectedAnime.title.english || selectedAnime.title.romaji}
+                </h2>
+
+                <div className="reveal-detail-meta">
+                  <span>{selectedAnime.format}</span>
+                  {selectedAnime.episodes && <span>{selectedAnime.episodes} eps</span>}
+                  {selectedAnime.averageScore && <span>⭐ {selectedAnime.averageScore}%</span>}
+                  {selectedAnime.seasonYear && <span>{selectedAnime.seasonYear}</span>}
+                  {selectedAnime.studios?.nodes?.[0] && <span>{selectedAnime.studios.nodes[0].name}</span>}
                 </div>
 
-                {/* Foil Shimmer Overlay */}
-                <div className="card-foil" />
-
-                {/* Confetti */}
-                <div className="confetti-container">
-                  {Array.from({ length: confettiCount }).map((_, i) => (
-                    <motion.div
-                      key={i}
-                      className="confetti-piece"
-                      initial={{ y: 0, x: 0, rotate: 0, opacity: 1 }}
-                      animate={{
-                        y: [0, -180, 350],
-                        x: (motionJitter(i, 4) - 0.5) * 450,
-                        rotate: motionJitter(i, 5) * 720 - 360,
-                        opacity: [1, 1, 0]
-                      }}
-                      transition={{
-                        duration: 2.8,
-                        delay: i * 0.025,
-                        ease: 'easeOut'
-                      }}
-                      style={{
-                        left: '50%',
-                        background: ['#3db4f2', '#fc6d89', '#4cca51', '#ef881a', '#c063ff'][i % 5],
-                        width: motionJitter(i, 6) * 10 + 5,
-                        height: motionJitter(i, 7) * 10 + 5,
-                      }}
-                    />
+                <div className="reveal-detail-genres">
+                  {selectedAnime.genres.map(genre => (
+                    <span key={genre} className="genre-tag">{genre}</span>
                   ))}
                 </div>
-              </motion.div>
 
-              {/* Another Pull Button — hidden in checkout flow (Draw Again in post-reveal-nav handles it) */}
-              {!autoOpenPackOnce && (
-                <motion.button
-                  className="another-pull-btn"
-                  onClick={resetPack}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.8 }}
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
+                {selectedAnime.description && (
+                  <p className="reveal-detail-synopsis">
+                    {selectedAnime.description.replace(/<[^>]*>/g, '').slice(0, 400)}
+                    {selectedAnime.description.replace(/<[^>]*>/g, '').length > 400 ? '…' : ''}
+                  </p>
+                )}
+
+                {becauseYouLiked && (
+                  <p className="reveal-detail-because">
+                    Because you liked <strong>{becauseYouLiked.title.english || becauseYouLiked.title.romaji}</strong>
+                  </p>
+                )}
+
+                {streamingServices.length > 0 && (
+                  <div className="reveal-detail-streaming">
+                    <span className="reveal-streaming-label">Where to Watch</span>
+                    <div className="reveal-streaming-list">
+                      {streamingServices.map(s => (
+                        <span key={s.id} className="reveal-streaming-badge" style={{ '--svc-color': s.color } as React.CSSProperties}>
+                          {s.name}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                <a
+                  href={`https://anilist.co/anime/${selectedAnime.id}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="reveal-detail-anilist"
                 >
-                  <svg className="another-pull-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
-                    <rect x="3" y="3" width="18" height="18" rx="2" />
-                    <circle cx="8.5" cy="8.5" r="1.5" fill="currentColor" stroke="none" />
-                    <circle cx="15.5" cy="15.5" r="1.5" fill="currentColor" stroke="none" />
-                    <path d="M15 9h.01M9 15h.01" />
-                  </svg>
-                  Another Pull
-                </motion.button>
-              )}
+                  Open in AniList
+                </a>
+              </motion.div>
             </motion.div>
           )}
         </AnimatePresence>

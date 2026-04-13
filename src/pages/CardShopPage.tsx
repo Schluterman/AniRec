@@ -62,14 +62,6 @@ function CardShopPageInner({ initialShopUserName }: { initialShopUserName: strin
   const {
     theme,
     toggleTheme,
-    userName,
-    setUserName,
-    searchedUser,
-    handleSearch,
-    watchlist,
-    setSearchedUser,
-    setDismissedIds,
-    setActivePackId,
   } = useSession();
 
   // ── Step-1 state: the username the user types in the shop form
@@ -108,14 +100,8 @@ function CardShopPageInner({ initialShopUserName }: { initialShopUserName: strin
 
   // ── Step 2: open overlay
   const handleCheckout = () => {
-    const trimmed = verifiedUsername;
-    if (!trimmed || !profileReady) return;
-    // Sync global session so homepage works if user navigates there
-    setUserName(trimmed);
-    setSearchedUser(trimmed);
-    setDismissedIds(new Set());
-    setActivePackId(selectedPackId);
-    setRevealState({ username: trimmed, packId: selectedPackId });
+    if (!verifiedUsername || !profileReady) return;
+    setRevealState({ username: verifiedUsername, packId: selectedPackId });
   };
 
   const themeToggleButton = (
@@ -140,54 +126,21 @@ function CardShopPageInner({ initialShopUserName }: { initialShopUserName: strin
     </button>
   );
 
-  const sessionHeader = (
-    <header className="app-header">
+  const landingHeader = (
+    <header className="app-header app-header--landing">
       <div className="header-content container">
         <Link to="/" className="logo">
           <img src="/AniRecLogoText.png" alt="AniRec" className="logo-image" />
         </Link>
-
-        <div className="header-search">
-          <form className="search-form" onSubmit={handleSearch}>
-            <div className="search-input-wrapper">
-              <svg className="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <circle cx="11" cy="11" r="8" />
-                <path d="m21 21-4.35-4.35" />
-              </svg>
-              <input
-                type="text"
-                className="search-input"
-                placeholder="AniList username…"
-                value={userName}
-                onChange={e => setUserName(e.target.value)}
-                autoComplete="username"
-              />
-            </div>
-            <button type="submit" className="search-button">
-              Search
-            </button>
-          </form>
-        </div>
-
-        <div className="header-actions">
-          {watchlist.size > 0 && (
-            <div className="watchlist-badge" title="Saved to Watchlist">
-              <svg viewBox="0 0 24 24" fill="currentColor" width="16" height="16" aria-hidden>
-                <path d="M2 20h2c.55 0 1-.45 1-1v-9c0-.55-.45-1-1-1H2v11zm19.83-7.12c.11-.25.17-.52.17-.8V11c0-1.1-.9-2-2-2h-5.5l.92-4.65c.05-.22.02-.46-.08-.66-.23-.45-.52-.86-.88-1.22L14 2 7.59 8.41C7.21 8.79 7 9.3 7 9.83V19c0 1.1.9 2 2 2h9c.83 0 1.54-.5 1.84-1.22l3-7.09z" />
-              </svg>
-              <span>{watchlist.size}</span>
-            </div>
-          )}
-          {themeToggleButton}
-        </div>
+        <div className="header-actions">{themeToggleButton}</div>
       </div>
     </header>
   );
 
   return (
     <>
-      <div className={`app app--card-shop ${searchedUser ? 'app--session' : 'app--landing'}`}>
-        {searchedUser ? sessionHeader : null}
+      <div className="app app--card-shop app--landing">
+        {landingHeader}
 
         <main className="card-shop-page">
           <section className="card-shop-hero" aria-labelledby="card-shop-hero-title">
@@ -242,7 +195,7 @@ function CardShopPageInner({ initialShopUserName }: { initialShopUserName: strin
                             className="card-shop-checkout-submit"
                             disabled={!shopUserName.trim() || isLoading}
                           >
-                            {isLoading ? 'Loading…' : 'Search'}
+                            {isLoading ? <><span className="btn-spinner" />{' Loading…'}</> : 'Search'}
                           </button>
                         )}
                       </div>

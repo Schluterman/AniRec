@@ -10,11 +10,8 @@ export function computePoolCounts(
 ): Record<ActivePackId, number> {
   const counts = {} as Record<ActivePackId, number>;
   counts.anirec = filteredMedia.length;
-  const planningIds = processedData
-    ? new Set(processedData.byStatus.planning.map(e => e.media.id))
-    : null;
-  counts.planning = planningIds
-    ? filteredMedia.filter(a => planningIds.has(a.id)).length
+  counts.planning = processedData
+    ? processedData.byStatus.planning.length
     : 0;
   for (const s of STREAMING_SERVICES) {
     counts[s.id] = filteredMedia.filter(a =>

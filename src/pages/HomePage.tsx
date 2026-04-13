@@ -41,8 +41,7 @@ export function HomePage() {
 
   const finalFilteredMedia = useMemo(() => {
     if (activePackId === 'planning' && processedData) {
-      const planningIds = new Set(processedData.byStatus.planning.map(e => e.media.id));
-      return filteredMedia.filter(a => planningIds.has(a.id));
+      return processedData.byStatus.planning.map(e => e.media);
     }
     if (activePackId === 'anirec') return filteredMedia;
     return filteredMedia.filter(a => {
@@ -133,7 +132,9 @@ export function HomePage() {
                     />
                   </div>
                   <button type="submit" className="search-button" disabled={isLoading && !!searchedUser}>
-                    {isLoading && searchedUser ? 'Loading…' : 'Search'}
+                    {isLoading && searchedUser
+                      ? <><span className="btn-spinner" />{' Loading…'}</>
+                      : 'Search'}
                   </button>
                 </form>
               </div>

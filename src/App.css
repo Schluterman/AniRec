@@ -192,6 +192,22 @@
 .search-button:active { transform: translateY(0); }
 .search-button:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
 
+.search-button .btn-spinner {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: btnSpin 0.6s linear infinite;
+  vertical-align: middle;
+  margin-right: 6px;
+}
+
+@keyframes btnSpin {
+  to { transform: rotate(360deg); }
+}
+
 /* Header actions */
 .header-actions {
   display: flex;
